@@ -2,6 +2,13 @@ package dto
 
 import "github.com/farzadamr/event-manager-api/domain/model"
 
+type TokenDetail struct {
+	AccessToken            string
+	RefreshToken           string
+	AccessTokenExpireTime  int64
+	RefreshTokenExpireTime int64
+}
+
 type RegisterByStudentNumber struct {
 	FirstName     string
 	LastName      string

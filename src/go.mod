@@ -4,6 +4,7 @@ go 1.23.5
 
 require (
 	github.com/gin-gonic/gin v1.11.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/spf13/viper v1.21.0
 	golang.org/x/crypto v0.40.0
 	gorm.io/driver/postgres v1.6.0
