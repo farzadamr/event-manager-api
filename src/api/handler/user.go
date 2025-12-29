@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/farzadamr/event-manager-api/api/dto"
+	"github.com/farzadamr/event-manager-api/api/helper"
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/dependency"
@@ -31,13 +32,14 @@ func (h *UserHandler) LoginByStudentNumber(c *gin.Context) {
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest,
-			gin.H{"Message": "Validation Error"})
+			helper.GenerateBaseResponseWithValidationError(nil, false, err))
 		return
 	}
 
 	token, err := h.userUsecase.LoginByStudentnumber(c, req.StudentNumber, req.Password)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err),
+			helper.GenerateBaseResponseWithError(nil, false, err))
 		return
 	}
 
@@ -52,23 +54,23 @@ func (h *UserHandler) LoginByStudentNumber(c *gin.Context) {
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	c.JSON(http.StatusCreated, token)
+	c.JSON(http.StatusCreated, helper.GenerateBaseResponse(token, true))
 }
 func (h *UserHandler) RegisterByStudentNumber(c *gin.Context) {
 	var req dto.RegisterUserByStudentNumberRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest,
-			gin.H{"error": err.Error()})
+			helper.GenerateBaseResponseWithValidationError(nil, false, err))
 		return
 	}
 	err = h.userUsecase.RegisterByStudentNumber(c, req.ToRegisterUserByStudentNumber())
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError,
-			gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err),
+			helper.GenerateBaseResponseWithError(nil, false, err))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+	c.JSON(http.StatusOK, helper.GenerateBaseResponse(nil, true))
 
 }
 
@@ -89,5 +91,5 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	c.JSON(http.StatusOK, token)
+	c.JSON(http.StatusOK, helper.GenerateBaseResponse(token, true))
 }
