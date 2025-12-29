@@ -5,13 +5,17 @@ import (
 	"log"
 
 	"github.com/farzadamr/event-manager-api/api/router"
+	"github.com/farzadamr/event-manager-api/api/validation"
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 func InitServer(cfg *config.Config) {
 	gin.SetMode(cfg.Server.RunMode)
 	r := gin.New()
+	RegisterValidatiors()
 
 	RegisterRoutes(r, cfg)
 	err := r.Run(fmt.Sprintf(":%s", cfg.Server.InternalPort))
@@ -31,4 +35,18 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config) {
 
 	}
 
+}
+
+func RegisterValidatiors() {
+	val, ok := binding.Validator.Engine().(*validator.Validate)
+	if ok {
+		err := val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
+		if err != nil {
+			log.Fatalf("Unable to register validator -> %s", err.Error())
+		}
+		err = val.RegisterValidation("password", validation.PasswordValidator, true)
+		if err != nil {
+			log.Fatalf("Unable to register validator -> %s", err.Error())
+		}
+	}
 }
