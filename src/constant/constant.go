@@ -13,7 +13,7 @@ const (
 	UserIdKey              string = "UserId"
 	FirstNameKey           string = "FirstName"
 	LastNameKey            string = "LastName"
-	UsernameKey            string = "Username"
+	StudentNumberKey       string = "StudentNumber"
 	EmailKey               string = "Email"
 	MobileNumberKey        string = "MobileNumber"
 	RolesKey               string = "Roles"

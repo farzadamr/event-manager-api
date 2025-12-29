@@ -11,14 +11,16 @@ import (
 )
 
 type UserUsecase struct {
-	cfg        *config.Config
-	repository repository.UserRepository
+	cfg          *config.Config
+	repository   repository.UserRepository
+	tokenUsecase *TokenUsecase
 }
 
 func NewUserUsecase(cfg *config.Config, repository repository.UserRepository) *UserUsecase {
 	return &UserUsecase{
-		cfg:        cfg,
-		repository: repository,
+		cfg:          cfg,
+		repository:   repository,
+		tokenUsecase: NewTokenUsecase(cfg),
 	}
 }
 
@@ -52,4 +54,25 @@ func (u *UserUsecase) RegisterByStudentNumber(ctx context.Context, req dto.Regis
 		return err
 	}
 	return nil
+}
+
+func (u *UserUsecase) LoginByStudentnumber(ctx context.Context, studenNumber string, password string) (*dto.TokenDetail, error) {
+	user, err := u.repository.FetchUserInfo(ctx, studenNumber, password)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenDto := tokenDto{UserId: user.Id, FirstName: user.FirstName, LastName: user.LastName,
+		Email: user.Email, StudentNumber: user.Student_Number}
+	if len(user.UserRoles) > 0 {
+		for _, ur := range user.UserRoles {
+			tokenDto.Roles = append(tokenDto.Roles, ur.Role.Name)
+		}
+	}
+
+	token, err := u.tokenUsecase.GenerateToken(tokenDto)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
