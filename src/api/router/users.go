@@ -9,7 +9,7 @@ import (
 func User(router *gin.RouterGroup, cfg *config.Config) {
 	h := handler.NewUserHandler(cfg)
 
-	//router.POST("/login-by-student-number", h.LoginByStudentNumber)
+	router.POST("/login-by-student-number", h.LoginByStudentNumber)
 	router.POST("/register-by-student-number", h.RegisterByStudentNumber)
-	//router.POST("/refresh-token", h.RefreshToken)
+	router.POST("/refresh-token", h.RefreshToken)
 }

@@ -7,7 +7,11 @@ type RegisterUserByStudentNumberRequest struct {
 	LastName      string `json:"lastName" binding:"required,min=3"`
 	StudentNumber string `json:"studentNumber" binding:"required,min=10,max=10"`
 	Email         string `json:"email" binding:"min=6"`
-	Password      string `json:"password" binding:"required,min=6"`
+	Password      string `json:"password" binding:"required,min=6,max=16"`
+}
+type LoginByStudentNumberRequest struct {
+	StudentNumber string `json:"studentNumber" binding:"required,min=10,max=10"`
+	Password      string `json:"password" binding:"required,min=6,max=16"`
 }
 
 func (from RegisterUserByStudentNumberRequest) ToRegisterUserByStudentNumber() usecase.RegisterByStudentNumber {
