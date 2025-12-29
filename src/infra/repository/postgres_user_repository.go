@@ -5,6 +5,7 @@ import (
 
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/model"
+	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -52,12 +53,12 @@ func (r *PostgresUserRepository) FetchUserInfo(ctx context.Context, username str
 		Find(&user).Error
 
 	if err != nil {
-		return user, err
+		return user, &service_errors.ServiceError{EndUserMessage: service_errors.UsernameOrPasswordInvalid}
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return user, err
+		return user, &service_errors.ServiceError{EndUserMessage: service_errors.UsernameOrPasswordInvalid}
 	}
 
 	return user, nil
