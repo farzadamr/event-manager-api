@@ -12,8 +12,9 @@ type RegisterByStudentNumber struct {
 
 func ToUserModel(from RegisterByStudentNumber) model.User {
 	return model.User{
-		FirstName: from.FirstName,
-		LastName:  from.LastName,
-		Email:     from.Email,
+		FirstName:      from.FirstName,
+		LastName:       from.LastName,
+		Student_Number: from.StudentNumber,
+		Email:          from.Email,
 	}
 }
