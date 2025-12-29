@@ -2,7 +2,6 @@ package model
 
 type User struct {
 	BaseModel
-	Username       string `gorm:"type:string;size:20;not null;unique"`
 	Student_Number string `gorm:"type:string;size:10;unique;not null"`
 	FirstName      string `gorm:"type:string;size:15;null"`
 	LastName       string `gorm:"type:string;size:25;null"`

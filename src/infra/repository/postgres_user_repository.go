@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	userFilterExp  string = "username = ?"
+	userFilterExp  string = "student_number = ?"
 	countFilterExp string = "count(*) > 0"
 )
 
@@ -74,11 +74,11 @@ func (r *PostgresUserRepository) ExistsEmail(ctx context.Context, email string) 
 	return exists, nil
 }
 
-func (r *PostgresUserRepository) ExistsUsername(ctx context.Context, username string) (bool, error) {
+func (r *PostgresUserRepository) ExistsStudentNumber(ctx context.Context, studentNumber string) (bool, error) {
 	var exists bool
 	if err := r.database.WithContext(ctx).Model(&model.User{}).
 		Select(countFilterExp).
-		Where(userFilterExp, username).
+		Where(userFilterExp, studentNumber).
 		Find(&exists).
 		Error; err != nil {
 		return false, err

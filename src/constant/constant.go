@@ -4,7 +4,7 @@ const (
 	// User
 	AdminRoleName          string = "admin"
 	AdminRoleDisplayName   string = "Administrator"
-	DefaultUserName        string = "admin"
+	DefaultStudentNumber   string = "4010000000"
 	DefaultRoleName        string = "default"
 	DefaultRoleDisplayName string = "Default User"
 
