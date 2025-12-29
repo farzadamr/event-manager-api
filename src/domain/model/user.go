@@ -14,8 +14,8 @@ type User struct {
 
 type Role struct {
 	BaseModel
-	Name         string `gorm:"type:string;size:10;not null;unique"`
-	Display_Name string `gorm:"type:string;size:10;not null;unique"`
+	Name         string `gorm:"type:string;size:25;not null;unique"`
+	Display_Name string `gorm:"type:string;size:25;not null;unique"`
 	UserRoles    []UserRole
 }
 

@@ -18,7 +18,7 @@ type PostgresUserRepository struct {
 	*BaseRepository[model.User]
 }
 
-func NewPostgresUserRepository() *PostgresUserRepository {
+func NewUserRepository() *PostgresUserRepository {
 	return &PostgresUserRepository{BaseRepository: NewBaseRepository[model.User]()}
 }
 

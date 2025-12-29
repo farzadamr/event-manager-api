@@ -92,7 +92,7 @@ func getConfigPath(env string) string {
 	} else if env == "production" {
 		return "/config/config-production"
 	} else {
-		return "../config/config-development"
+		return "./config/config-development"
 	}
 }
 func LoadConfig(fileName string, fileType string) (*viper.Viper, error) {

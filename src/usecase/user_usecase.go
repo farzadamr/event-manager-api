@@ -25,14 +25,14 @@ func NewUserUsecase(cfg *config.Config, repository repository.UserRepository) *U
 func (u *UserUsecase) RegisterByStudentNumber(ctx context.Context, req dto.RegisterByStudentNumber) error {
 	user := dto.ToUserModel(req)
 
-	exists, err := u.repository.ExistEmail(ctx, req.Email)
+	exists, err := u.repository.ExistsEmail(ctx, req.Email)
 	if err != nil {
 		return err
 	}
 	if exists {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.EmailExists}
 	}
-	exists, err = u.repository.ExistStudentNumber(ctx, req.StudentNumber)
+	exists, err = u.repository.ExistsStudentNumber(ctx, req.StudentNumber)
 	if err != nil {
 		return err
 	}
