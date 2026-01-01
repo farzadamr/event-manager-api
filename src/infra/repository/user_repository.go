@@ -5,6 +5,7 @@ import (
 
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/model"
+	"github.com/farzadamr/event-manager-api/infra/database"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -15,15 +16,15 @@ const (
 	countFilterExp string = "count(*) > 0"
 )
 
-type PostgresUserRepository struct {
-	*BaseRepository[model.User]
+type UserRepository struct {
+	database *gorm.DB
 }
 
-func NewUserRepository() *PostgresUserRepository {
-	return &PostgresUserRepository{BaseRepository: NewBaseRepository[model.User]()}
+func NewUserRepository() *UserRepository {
+	return &UserRepository{database: database.GetDb()}
 }
 
-func (r *PostgresUserRepository) CreateUser(ctx context.Context, u model.User) (model.User, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, u model.User) (model.User, error) {
 	roleId, err := r.GetDefaultRole(ctx)
 	if err != nil {
 		return u, err
@@ -42,7 +43,7 @@ func (r *PostgresUserRepository) CreateUser(ctx context.Context, u model.User) (
 	tx.Commit()
 	return u, nil
 }
-func (r *PostgresUserRepository) FetchUserInfo(ctx context.Context, username string, password string) (model.User, error) {
+func (r *UserRepository) FetchUserInfo(ctx context.Context, username string, password string) (model.User, error) {
 	var user model.User
 	err := r.database.WithContext(ctx).
 		Model(&model.User{}).
@@ -63,7 +64,7 @@ func (r *PostgresUserRepository) FetchUserInfo(ctx context.Context, username str
 
 	return user, nil
 }
-func (r *PostgresUserRepository) ExistsEmail(ctx context.Context, email string) (bool, error) {
+func (r *UserRepository) ExistsEmail(ctx context.Context, email string) (bool, error) {
 	var exists bool
 	if err := r.database.WithContext(ctx).Model(&model.User{}).
 		Select(countFilterExp).
@@ -75,7 +76,7 @@ func (r *PostgresUserRepository) ExistsEmail(ctx context.Context, email string) 
 	return exists, nil
 }
 
-func (r *PostgresUserRepository) ExistsStudentNumber(ctx context.Context, studentNumber string) (bool, error) {
+func (r *UserRepository) ExistsStudentNumber(ctx context.Context, studentNumber string) (bool, error) {
 	var exists bool
 	if err := r.database.WithContext(ctx).Model(&model.User{}).
 		Select(countFilterExp).
@@ -87,7 +88,7 @@ func (r *PostgresUserRepository) ExistsStudentNumber(ctx context.Context, studen
 	return exists, nil
 }
 
-func (r *PostgresUserRepository) ExistsMobileNumber(ctx context.Context, mobileNumber string) (bool, error) {
+func (r *UserRepository) ExistsMobileNumber(ctx context.Context, mobileNumber string) (bool, error) {
 	var exists bool
 	if err := r.database.WithContext(ctx).Model(&model.User{}).
 		Select(countFilterExp).
@@ -99,7 +100,7 @@ func (r *PostgresUserRepository) ExistsMobileNumber(ctx context.Context, mobileN
 	return exists, nil
 }
 
-func (r *PostgresUserRepository) GetDefaultRole(ctx context.Context) (roleId int, err error) {
+func (r *UserRepository) GetDefaultRole(ctx context.Context) (roleId int, err error) {
 
 	if err = r.database.WithContext(ctx).Model(&model.Role{}).
 		Select("id").

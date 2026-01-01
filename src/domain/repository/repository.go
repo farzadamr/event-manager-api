@@ -3,15 +3,9 @@ package repository
 import (
 	"context"
 
+	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 )
-
-type BaseRepository[TEntity any] interface {
-	Create(ctx context.Context, entity TEntity) (TEntity, error)
-	Update(ctx context.Context, id int, entity map[string]interface{}) (TEntity, error)
-	Delete(ctx context.Context, id int) error
-	GetById(ctx context.Context, id int) (TEntity, error)
-}
 
 type UserRepository interface {
 	ExistsMobileNumber(ctx context.Context, mobileNumber string) (bool, error)
@@ -22,18 +16,11 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, u model.User) (model.User, error)
 }
 
-type RoleRepository interface {
-	BaseRepository[model.Role]
-}
-
-type CertificateRepository interface {
-	BaseRepository[model.Certificate]
-}
-
-type RegistrationRepository interface {
-	BaseRepository[model.Registration]
-}
-
 type EventRepository interface {
-	BaseRepository[model.Event]
+	Create(ctx context.Context, e model.Event) (model.Event, error)
+	Update(ctx context.Context, id int, e map[string]interface{}) (model.Event, error)
+	Delete(ctx context.Context, id int) error
+	GetById(ctx context.Context, id int) (model.Event, error)
+	GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, *[]model.Event, error)
+	ChangeEventStatus(ctx context.Context, id int) error
 }

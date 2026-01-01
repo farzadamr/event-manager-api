@@ -4,10 +4,10 @@ import "time"
 
 type Event struct {
 	BaseModel
-	Title       string `gorm:"type:string;size:64;not null;unique"`
-	Description string `gorm:"type:string;size:1024;not null"`
-	PosterPath  string `gorm:"type:string;size:128;not null"`
-	Teacher     User   `gorm:"foreignKey:TeacherId;constraint:OnUpdate:NO ACTION;OnDelete:NO ACTION"`
+	Title       string  `gorm:"type:string;size:64;not null;unique"`
+	Description string  `gorm:"type:string;size:1024;not null"`
+	Poster      FileRef `gorm:"embedded;embeddedPrefix:poster_"`
+	Teacher     User    `gorm:"foreignKey:TeacherId;constraint:OnUpdate:NO ACTION;OnDelete:NO ACTION"`
 	TeacherId   int
 	Capacity    int
 	Date        time.Time `gorm:"type:TIMESTAMP with time zone;not null"`

@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type PreloadEntity struct {
+	Entity string
+}
+
 var dbClient *gorm.DB
 
 func InitDb(cfg *config.Config) error {
@@ -47,4 +51,12 @@ func GetDb() *gorm.DB {
 func CloseDb() {
 	conn, _ := dbClient.DB()
 	conn.Close()
+}
+
+// Preload
+func Preload(db *gorm.DB, preloads []PreloadEntity) *gorm.DB {
+	for _, item := range preloads {
+		db = db.Preload(item.Entity)
+	}
+	return db
 }

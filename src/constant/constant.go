@@ -7,6 +7,8 @@ const (
 	DefaultStudentNumber   string = "4010000000"
 	DefaultRoleName        string = "default"
 	DefaultRoleDisplayName string = "Default User"
+	TeacherRoleName        string = "teacher"
+	TeacherRoleDisplayName string = "Teacher User"
 
 	// Claims
 	AuthorizationHeaderKey string = "Authorization"
