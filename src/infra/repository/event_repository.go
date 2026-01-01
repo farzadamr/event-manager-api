@@ -16,10 +16,11 @@ import (
 
 type EventRepository struct {
 	database *gorm.DB
+	preloads []database.PreloadEntity
 }
 
 func NewEventRepository(preloads []database.PreloadEntity) *EventRepository {
-	return &EventRepository{database: database.GetDb()}
+	return &EventRepository{database: database.GetDb(), preloads: preloads}
 }
 
 func (r *EventRepository) Create(ctx context.Context, e model.Event) (model.Event, error) {
@@ -28,7 +29,7 @@ func (r *EventRepository) Create(ctx context.Context, e model.Event) (model.Even
 		Create(e).Error
 	if err != nil {
 		tx.Rollback()
-		return e, nil
+		return model.Event{}, err
 	}
 	tx.Commit()
 	return e, nil
@@ -44,7 +45,7 @@ func (r *EventRepository) Update(ctx context.Context, id int, e map[string]inter
 	model := new(model.Event)
 	tx := r.database.WithContext(ctx).Begin()
 	if err := tx.Model(model).
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		Updates(snakeMap).
 		Error; err != nil {
 		tx.Rollback()
@@ -69,7 +70,7 @@ func (r *EventRepository) Delete(ctx context.Context, id int) error {
 	}
 	if cnt := tx.
 		Model(model).
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		Updates(deleteMap).
 		RowsAffected; cnt == 0 {
 		tx.Rollback()
@@ -87,7 +88,7 @@ func (r *EventRepository) GetById(ctx context.Context, id int) (model.Event, err
 		Preload("Teacher")
 
 	err := db.
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		First(event).
 		Error
 
@@ -101,8 +102,7 @@ func (r *EventRepository) GetById(ctx context.Context, id int) (model.Event, err
 func (r *EventRepository) GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, *[]model.Event, error) {
 	event := new(model.Event)
 	var items *[]model.Event
-	preloads := []database.PreloadEntity{{Entity: "Teacher"}}
-	db := database.Preload(r.database, preloads)
+	db := database.Preload(r.database, r.preloads)
 
 	var totalRows int64 = 0
 	if err := db.

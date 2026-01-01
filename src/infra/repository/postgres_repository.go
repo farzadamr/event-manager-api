@@ -11,7 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const softDeleteExp = "id = ? and deleted_by is null"
+const softDeleteWithIdExp = "id = ? and deleted_by is null"
+const softDeleteExp = "and deleted_by is null"
 
 type BaseRepository[TEntity any] struct {
 	database *gorm.DB
@@ -46,7 +47,7 @@ func (r *BaseRepository[TEntity]) Update(ctx context.Context, id int, entity map
 	model := new(TEntity)
 	tx := r.database.WithContext(ctx).Begin()
 	if err := tx.Model(model).
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		Updates(snakeMap).Error; err != nil {
 		tx.Rollback()
 		// log
@@ -69,7 +70,7 @@ func (r *BaseRepository[TEntity]) Delete(ctx context.Context, id int) error {
 	}
 	if cnt := tx.
 		Model(model).
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		Updates(deleteMap).RowsAffected; cnt == 0 {
 		tx.Rollback()
 		// log
@@ -83,7 +84,7 @@ func (r *BaseRepository[TEntity]) Delete(ctx context.Context, id int) error {
 func (r *BaseRepository[TEntity]) GetById(ctx context.Context, id int) (TEntity, error) {
 	model := new(TEntity)
 	err := r.database.WithContext(ctx).
-		Where(softDeleteExp, id).
+		Where(softDeleteWithIdExp, id).
 		First(model).Error
 	if err != nil {
 		// log

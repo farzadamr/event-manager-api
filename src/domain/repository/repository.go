@@ -24,3 +24,13 @@ type EventRepository interface {
 	GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, *[]model.Event, error)
 	ChangeEventStatus(ctx context.Context, id int) error
 }
+
+type RegisterationRepository interface {
+	Create(ctx context.Context, r model.Registration) (model.Registration, error)
+	FindByEventIDAndUserID(ctx context.Context, eventID, userID int) (model.Registration, error)
+	ListByEventID(ctx context.Context, eventID int, pagination filter.PaginationInput) (int64, []model.Registration, error)
+	ListByUserID(ctx context.Context, userId int, pagination filter.PaginationInput) (int64, []model.Registration, error)
+	CancelByUser(ctx context.Context, eventID, userID int) error
+	CancelByEvent(ctx context.Context, eventID int) error
+	UpdateAttendanceStatus(ctx context.Context, registrationId int, status model.AttendanceStatus) error
+}
