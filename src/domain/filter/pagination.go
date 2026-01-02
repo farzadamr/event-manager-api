@@ -6,10 +6,10 @@ import (
 	"github.com/farzadamr/event-manager-api/common"
 )
 
-func Paginate[TInput any, TOutout any](totalRows int64, items *[]TInput, pageNumber int, pageSize int64) (*PagedList[TOutout], error) {
+func Paginate[TInput any, TOutout any](totalRows int64, items []TInput, pageNumber int, pageSize int64) (*PagedList[TOutout], error) {
 	var rItems []TOutout
 
-	rItems, err := common.TypeConverter[[]TOutout](items)
+	rItems, err := common.TypeConverter[[]TOutout](&items)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
@@ -56,10 +57,18 @@ func (r *EventRepository) Update(ctx context.Context, id int, e map[string]inter
 }
 
 func (r *EventRepository) Delete(ctx context.Context, id int) error {
+	event, err := r.GetById(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+		}
+		return err
+	}
+	if event.CreatedBy == int(ctx.Value(constant.UserIdKey).(float64)) {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
 	tx := r.database.WithContext(ctx).Begin()
-
 	model := new(model.Event)
-
 	deleteMap := map[string]interface{}{
 		"deleted_by": &sql.NullInt64{Int64: int64(ctx.Value(constant.UserIdKey).(float64)), Valid: true},
 		"deleted_at": sql.NullTime{Valid: true, Time: time.Now().UTC()},
@@ -99,14 +108,14 @@ func (r *EventRepository) GetById(ctx context.Context, id int) (model.Event, err
 	return *event, nil
 }
 
-func (r *EventRepository) GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, *[]model.Event, error) {
+func (r *EventRepository) GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, []model.Event, error) {
 	event := new(model.Event)
-	var items *[]model.Event
-	db := database.Preload(r.database, r.preloads)
+	var items []model.Event
 
 	var totalRows int64 = 0
-	if err := db.
+	if err := r.database.WithContext(ctx).
 		Model(event).
+		Where("active = ? and deleted_by is null", true).
 		Count(&totalRows).Error; err != nil {
 		return 0, nil, err
 	}
@@ -114,7 +123,9 @@ func (r *EventRepository) GetByFilter(ctx context.Context, req filter.Pagination
 	offset := req.GetOffset()
 	limit := req.GetPageSize()
 
-	if err := db.Offset(offset).Limit(limit).Find(items).Error; err != nil {
+	db := r.database.WithContext(ctx)
+	db = database.Preload(db, r.preloads)
+	if err := db.Offset(offset).Limit(limit).Find(&items).Error; err != nil {
 		return 0, nil, err
 	}
 	return totalRows, items, nil
@@ -123,9 +134,11 @@ func (r *EventRepository) GetByFilter(ctx context.Context, req filter.Pagination
 func (r *EventRepository) ChangeEventStatus(ctx context.Context, id int) error {
 	event := new(model.Event)
 	if err := r.database.WithContext(ctx).First(event, id).Error; err != nil {
-		return err //not found
+		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
-
+	if event.CreatedBy != int(ctx.Value(constant.UserIdKey).(float64)) {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
 	event.Active = !event.Active
 
 	if err := r.database.WithContext(ctx).Save(event).Error; err != nil {

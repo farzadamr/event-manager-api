@@ -110,3 +110,18 @@ func (r *UserRepository) GetDefaultRole(ctx context.Context) (roleId int, err er
 	}
 	return roleId, nil
 }
+
+func (r *UserRepository) FetchUserInfoById(ctx context.Context, id int) (model.User, error) {
+	var user model.User
+	err := r.database.
+		Model(&model.User{}).
+		Where("id = ?", id).
+		Preload("UserRoles", func(tx *gorm.DB) *gorm.DB {
+			return tx.Preload("Role")
+		}).
+		Find(&user).Error
+	if err != nil {
+		return model.User{}, err
+	}
+	return user, nil
+}
