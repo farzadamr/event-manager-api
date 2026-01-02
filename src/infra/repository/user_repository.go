@@ -119,7 +119,7 @@ func (r *UserRepository) FetchUserInfoById(ctx context.Context, id int) (model.U
 		Preload("UserRoles", func(tx *gorm.DB) *gorm.DB {
 			return tx.Preload("Role")
 		}).
-		Find(&user).Error
+		First(&user).Error
 	if err != nil {
 		return model.User{}, err
 	}

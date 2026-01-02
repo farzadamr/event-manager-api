@@ -32,9 +32,10 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config) {
 		// User
 		users := v1.Group("/users")
 		router.User(users, cfg)
-
+		// Event
+		events := v1.Group("/events")
+		router.Event(events, cfg)
 	}
-
 }
 
 func RegisterValidatiors() {
@@ -45,6 +46,10 @@ func RegisterValidatiors() {
 			log.Fatalf("Unable to register validator -> %s", err.Error())
 		}
 		err = val.RegisterValidation("password", validation.PasswordValidator, true)
+		if err != nil {
+			log.Fatalf("Unable to register validator -> %s", err.Error())
+		}
+		err = val.RegisterValidation("date", validation.DateValidator, true)
 		if err != nil {
 			log.Fatalf("Unable to register validator -> %s", err.Error())
 		}

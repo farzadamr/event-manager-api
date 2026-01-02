@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/farzadamr/event-manager-api/constant"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +21,7 @@ type BaseModel struct {
 }
 
 func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
-	value := tx.Statement.Context.Value("UserId")
+	value := tx.Statement.Context.Value(constant.UserIdKey)
 	var userId = -1
 	if value != nil {
 		userId = int(value.(float64))

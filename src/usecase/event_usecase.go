@@ -7,7 +7,6 @@ import (
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
-	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
@@ -25,11 +24,20 @@ func NewEventUsecase(cfg *config.Config, eventRepo repository.EventRepository, u
 }
 
 func (u *EventUsecase) PublishEvent(ctx context.Context, req dto.CreateEvent) error {
-	_, err := u.userRepository.FetchUserInfoById(ctx, req.TeacherId)
+	teacher, err := u.userRepository.FetchUserInfoById(ctx, req.TeacherId)
 	if err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
-
+	hasValidRole := false
+	for _, userRole := range teacher.UserRoles {
+		if userRole.Role.Name == constant.TeacherRoleName {
+			hasValidRole = true
+			break
+		}
+	}
+	if !hasValidRole {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
 	_, err = u.eventRepository.Create(ctx, dto.CreateEventToEventModel(req))
 	if err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
@@ -38,30 +46,30 @@ func (u *EventUsecase) PublishEvent(ctx context.Context, req dto.CreateEvent) er
 	return nil
 }
 
-func (u *EventUsecase) Update(ctx context.Context, req dto.UpdateEvent) (model.Event, error) {
+func (u *EventUsecase) Update(ctx context.Context, req dto.UpdateEvent) error {
 	event, err := u.eventRepository.GetById(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.Event{}, &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+			return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 		}
-		return model.Event{}, err
+		return err
 	}
 
 	userId, _ := ctx.Value(constant.UserIdKey).(float64)
 	if event.CreatedBy != int(userId) {
-		return model.Event{}, &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 
 	updates := req.ToUpdateMap()
 	if len(updates) == 0 {
-		return model.Event{}, errors.New("no fields to update")
+		return errors.New("no fields to update")
 	}
 
-	res, err := u.eventRepository.Update(ctx, req.Id, updates)
+	_, err = u.eventRepository.Update(ctx, req.Id, updates)
 	if err != nil {
-		return model.Event{}, err
+		return err
 	}
-	return res, nil
+	return nil
 }
 
 func (u *EventUsecase) Delete(ctx context.Context, id int) error {

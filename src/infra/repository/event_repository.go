@@ -27,7 +27,7 @@ func NewEventRepository(preloads []database.PreloadEntity) *EventRepository {
 func (r *EventRepository) Create(ctx context.Context, e model.Event) (model.Event, error) {
 	tx := r.database.WithContext(ctx).Begin()
 	err := tx.
-		Create(e).Error
+		Create(&e).Error
 	if err != nil {
 		tx.Rollback()
 		return model.Event{}, err
@@ -64,7 +64,7 @@ func (r *EventRepository) Delete(ctx context.Context, id int) error {
 		}
 		return err
 	}
-	if event.CreatedBy == int(ctx.Value(constant.UserIdKey).(float64)) {
+	if event.CreatedBy != int(ctx.Value(constant.UserIdKey).(float64)) {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 	tx := r.database.WithContext(ctx).Begin()
@@ -125,7 +125,11 @@ func (r *EventRepository) GetByFilter(ctx context.Context, req filter.Pagination
 
 	db := r.database.WithContext(ctx)
 	db = database.Preload(db, r.preloads)
-	if err := db.Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+	if err := db.
+		Offset(offset).
+		Limit(limit).
+		Where("active = ? and deleted_by is null", true).
+		Find(&items).Error; err != nil {
 		return 0, nil, err
 	}
 	return totalRows, items, nil
@@ -136,7 +140,8 @@ func (r *EventRepository) ChangeEventStatus(ctx context.Context, id int) error {
 	if err := r.database.WithContext(ctx).First(event, id).Error; err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
-	if event.CreatedBy != int(ctx.Value(constant.UserIdKey).(float64)) {
+	userId := ctx.Value(constant.UserIdKey).(float64)
+	if event.CreatedBy != int(userId) {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 	event.Active = !event.Active
