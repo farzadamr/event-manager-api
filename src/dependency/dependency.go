@@ -14,3 +14,8 @@ func GetEventRepository() contractRepository.EventRepository {
 	var preloads []database.PreloadEntity = []database.PreloadEntity{{Entity: "Teacher"}}
 	return infraRepository.NewEventRepository(preloads)
 }
+
+func GetRegisterEventRepository() contractRepository.RegisterationRepository {
+	var preloads []database.PreloadEntity = []database.PreloadEntity{{Entity: "User"}, {Entity: "Event"}}
+	return infraRepository.NewRegistrationRepository(preloads)
+}

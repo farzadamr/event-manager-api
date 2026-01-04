@@ -9,16 +9,23 @@ import (
 
 func Event(router *gin.RouterGroup, cfg *config.Config) {
 	h := handler.NewEventHandler(cfg)
-
+	rh := handler.NewRegisterHandler(cfg)
 	router.GET("/:id", h.GetEventById)
 	router.GET("", h.GetEvents)
 
-	protected := router.Group("")
-	protected.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin"}))
+	adminRoutes := router.Group("")
+	adminRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin"}))
 	{
-		protected.POST("", h.Create)
-		protected.PATCH("/:id", h.Update)
-		protected.PATCH("/:id/status", h.ChangeEventStatus)
-		protected.DELETE("/:id", h.Delete)
+		adminRoutes.POST("", h.Create)
+		adminRoutes.PATCH("/:id", h.Update)
+		adminRoutes.PATCH("/:id/status", h.ChangeEventStatus)
+		adminRoutes.DELETE("/:id", h.Delete)
+	}
+
+	userProtected := router.Group("")
+	userProtected.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin", "teacher", "default"}))
+	{
+		userProtected.POST("/:id/register", rh.RegisterEvent)
+		userProtected.DELETE("/:id/register", rh.CancelRegisteration)
 	}
 }

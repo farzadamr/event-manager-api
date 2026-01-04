@@ -19,12 +19,12 @@ func NewRegistrationRepository(preloads []database.PreloadEntity) *RegistrationR
 	return &RegistrationRepository{database: database.GetDb(), preloads: preloads}
 }
 
-func (r *RegistrationRepository) Create(ctx context.Context, re model.Registration) (model.Registration, error) {
+func (r *RegistrationRepository) Create(ctx context.Context, re model.Registration) error {
 	err := r.database.WithContext(ctx).Create(&re).Error
 	if err != nil {
-		return model.Registration{}, err
+		return err
 	}
-	return re, nil
+	return nil
 }
 
 func (r *RegistrationRepository) FindByEventIDAndUserID(ctx context.Context, eventID, userID int) (model.Registration, error) {

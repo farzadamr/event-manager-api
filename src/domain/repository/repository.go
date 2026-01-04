@@ -27,7 +27,7 @@ type EventRepository interface {
 }
 
 type RegisterationRepository interface {
-	Create(ctx context.Context, r model.Registration) (model.Registration, error)
+	Create(ctx context.Context, r model.Registration) error
 	FindByEventIDAndUserID(ctx context.Context, eventID, userID int) (model.Registration, error)
 	ListByEventID(ctx context.Context, eventID int, pagination filter.PaginationInput) (int64, []model.Registration, error)
 	ListByUserID(ctx context.Context, userId int, pagination filter.PaginationInput) (int64, []model.Registration, error)
