@@ -13,11 +13,11 @@ import (
 
 type RegisterEventUsecase struct {
 	cfg                *config.Config
-	registerRepository repository.RegisterationRepository
+	registerRepository repository.RegistrationRepository
 	userRepository     repository.UserRepository
 }
 
-func NewRegisterEventUsecase(cfg *config.Config, registerRepo repository.RegisterationRepository, userRepo repository.UserRepository) *RegisterEventUsecase {
+func NewRegisterEventUsecase(cfg *config.Config, registerRepo repository.RegistrationRepository, userRepo repository.UserRepository) *RegisterEventUsecase {
 	return &RegisterEventUsecase{cfg: cfg, registerRepository: registerRepo, userRepository: userRepo}
 }
 
