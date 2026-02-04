@@ -15,7 +15,7 @@ import (
 func InitServer(cfg *config.Config) {
 	gin.SetMode(cfg.Server.RunMode)
 	r := gin.New()
-	RegisterValidatiors()
+	RegisterValidators()
 
 	RegisterRoutes(r, cfg)
 	err := r.Run(fmt.Sprintf(":%s", cfg.Server.InternalPort))
@@ -35,10 +35,13 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config) {
 		// Event
 		events := v1.Group("/events")
 		router.Event(events, cfg)
+		//Registrations
+		registrations := v1.Group("/registrations")
+		router.Registration(registrations, cfg)
 	}
 }
 
-func RegisterValidatiors() {
+func RegisterValidators() {
 	val, ok := binding.Validator.Engine().(*validator.Validate)
 	if ok {
 		err := val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)

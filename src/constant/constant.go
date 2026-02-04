@@ -23,4 +23,13 @@ const (
 
 	// JWT
 	RefreshTokenCookieName string = "refresh_token"
+
+	//RegisterStatus
+	StatusRegisteredKey       string = "REGISTERED"
+	StatusCancelledByUserKey  string = "CANCELLED_BY_USER"
+	StatusCancelledByEventKey string = "CANCELLED_BY_EVENT"
+
+	PresentKey      string = "PERESENT"
+	AbsentKey       string = "ABSENT"
+	NotCheckedInKey string = "NOT_CHECKED_IN"
 )

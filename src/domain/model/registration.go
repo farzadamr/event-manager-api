@@ -26,3 +26,19 @@ type Registration struct {
 	Status           RegistrationStatus `gorm:"type:text;default:'REGISTERED';not null"`
 	AttendanceStatus AttendanceStatus   `gorm:"type:text;default:'NOT_CHECKED_IN';not null"`
 }
+
+type AttendanceList struct {
+	Id               int
+	AttendanceStatus AttendanceStatus
+}
+
+func CheckAttendanceStatus(s string) AttendanceStatus {
+	switch s {
+	case "PRESENT":
+		return Present
+	case "ABSENT":
+		return Absent
+	default:
+		return NotCheckedIn
+	}
+}

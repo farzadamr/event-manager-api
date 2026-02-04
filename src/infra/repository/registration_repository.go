@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
@@ -43,7 +45,7 @@ func (r *RegistrationRepository) FindByEventIDAndUserID(ctx context.Context, eve
 }
 
 func (r *RegistrationRepository) ListByEventID(ctx context.Context, eventID int, pagination filter.PaginationInput) (int64, []model.Registration, error) {
-	q := "event_id = ?" + softDeleteExp
+	q := "event_id = ? " + softDeleteExp
 	var totalRows int64
 
 	if err := r.database.WithContext(ctx).
@@ -130,21 +132,26 @@ func (r *RegistrationRepository) CancelByEvent(ctx context.Context, eventID int)
 	return nil
 }
 
-func (r *RegistrationRepository) UpdateAttendanceStatus(ctx context.Context, registrationId int, status model.AttendanceStatus) error {
-	if valid := status == model.Present ||
-		status == model.Absent ||
-		status == model.NotCheckedIn; !valid {
-		return errors.New("invalid attendance status")
+func (r *RegistrationRepository) UpdateAttendanceList(ctx context.Context, attendanceList []model.AttendanceList) error {
+	if len(attendanceList) == 0 {
+		return errors.New("attendance list is empty")
 	}
 
-	q := "id = ? " + softDeleteExp
+	valuesClause := make([]string, 0, len(attendanceList))
+	args := make([]interface{}, 0, len(attendanceList)*2)
 
-	result := r.database.WithContext(ctx).
-		Model(&model.Registration{}).
-		Where(q, registrationId).
-		Update("attendance_status", status)
-	if result.Error != nil {
-		return result.Error
+	for i, v := range attendanceList {
+		// Cast id to BIGINT in SQL to avoid type ambiguity
+		valuesClause = append(valuesClause, fmt.Sprintf("($%d::BIGINT, $%d)", i*2+1, i*2+2))
+		args = append(args, v.Id, v.AttendanceStatus)
 	}
-	return nil
+
+	query := fmt.Sprintf(`
+		UPDATE registrations
+		SET attendance_status = v.status
+		FROM (VALUES %s) AS v(id, status)
+		WHERE registrations.id = v.id AND registrations.deleted_at IS NULL`,
+		strings.Join(valuesClause, ","))
+
+	return r.database.WithContext(ctx).Exec(query, args...).Error
 }

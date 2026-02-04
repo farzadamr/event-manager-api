@@ -33,5 +33,5 @@ type RegisterationRepository interface {
 	ListByUserID(ctx context.Context, userId int, pagination filter.PaginationInput) (int64, []model.Registration, error)
 	CancelByUser(ctx context.Context, eventID, userID int) error
 	CancelByEvent(ctx context.Context, eventID int) error
-	UpdateAttendanceStatus(ctx context.Context, registrationId int, status model.AttendanceStatus) error
+	UpdateAttendanceList(ctx context.Context, attendanceList []model.AttendanceList) error
 }

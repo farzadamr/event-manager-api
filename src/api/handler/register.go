@@ -45,7 +45,7 @@ func (h *RegisterHandler) RegisterEvent(c *gin.Context) {
 	c.JSON(http.StatusCreated, helper.GenerateBaseResponse(nil, true))
 }
 
-func (h *RegisterHandler) CancelRegisteration(c *gin.Context) {
+func (h *RegisterHandler) CancelRegistration(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, errors.New("event id required")))
