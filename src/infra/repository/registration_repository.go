@@ -155,3 +155,19 @@ func (r *RegistrationRepository) UpdateAttendanceList(ctx context.Context, atten
 
 	return r.database.WithContext(ctx).Exec(query, args...).Error
 }
+
+func (r *RegistrationRepository) GetAllAttendedByEventId(ctx context.Context, eventID int) ([]model.Registration, error) {
+	var registrations []model.Registration
+
+	db := r.database.WithContext(ctx)
+	db = database.Preload(db, r.preloads)
+
+	err := db.
+		Where("event_id = ? AND attendance_status = PRESENT", eventID).
+		Find(&registrations).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return registrations, nil
+}

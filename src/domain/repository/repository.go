@@ -34,6 +34,7 @@ type RegistrationRepository interface {
 	CancelByUser(ctx context.Context, eventID, userID int) error
 	CancelByEvent(ctx context.Context, eventID int) error
 	UpdateAttendanceList(ctx context.Context, attendanceList []model.AttendanceList) error
+	GetAllAttendedByEventId(ctx context.Context, eventID int) ([]model.Registration, error)
 }
 
 type CertificateRepository interface {
