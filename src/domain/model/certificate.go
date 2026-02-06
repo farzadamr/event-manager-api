@@ -1,21 +1,14 @@
 package model
 
 import (
-	"database/sql"
-)
-
-type CertificateStatus string
-
-const (
-	StatusIssued  CertificateStatus = "ISSUED"
-	StatusPending CertificateStatus = "CREATED"
+	"time"
 )
 
 type Certificate struct {
 	BaseModel
 	Registration   Registration `gorm:"foreignKey:RegistrationId;Constraint:OnUpdate:CASCADE,OnDelete:NO ACTION;"`
-	RegistrationId int
-	IssuedAt       sql.NullTime      `gorm:"type:TIMESTAMP with time zone; null"`
-	Pdf            FileRef           `gorm:"embedded;embeddedPrefix:file_"`
-	Status         CertificateStatus `gorm:"type:string;default:'CREATED'"`
+	RegistrationId int          `gorm:"uniqueIndex"`
+	IssuedAt       *time.Time   `gorm:"type:TIMESTAMP with time zone; null"`
+	Pdf            FileRef      `gorm:"embedded;embeddedPrefix:file_"`
+	TrackingCode   string       `gorm:"type:varchar(64);uniqueIndex;not null"`
 }
