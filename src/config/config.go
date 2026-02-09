@@ -15,6 +15,7 @@ type Config struct {
 	Password PasswordConfig
 	Cors     CorsConfig
 	JWT      JWTConfig
+	Pdf      PdfConfig
 }
 
 type ServerConfig struct {
@@ -54,6 +55,10 @@ type JWTConfig struct {
 	RefreshTokenExpireDuration time.Duration
 	Secret                     string
 	RefreshSecret              string
+}
+
+type PdfConfig struct {
+	Url string
 }
 
 func GetConfig() *Config {

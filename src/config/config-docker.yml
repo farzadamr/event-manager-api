@@ -27,3 +27,5 @@ jwt:
   refreshSecret: "mySecretKey"
   accessTokenExpireDuration: 60
   refreshTokenExpireDuration: 60
+pdf:
+  url: "http://localhost:3000/"
