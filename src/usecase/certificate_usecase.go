@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/farzadamr/event-manager-api/common"
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
@@ -28,6 +29,7 @@ type CertTemplateData struct {
 	Username      string
 	EventName     string
 	Duration      string
+	Date          string
 	CertificateID string
 }
 
@@ -105,6 +107,7 @@ func (uc *CertificateUsecase) generateHTML(participant model.Registration, track
 		Username:      participant.User.FirstName + " " + participant.User.LastName,
 		EventName:     participant.Event.Title,
 		Duration:      "12",
+		Date:          common.ToShamsiString(participant.Event.Date),
 		CertificateID: trackingCode,
 	}
 

@@ -16,6 +16,17 @@ services:
       - webapi-network
     restart: unless-stopped
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg_container
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./assets/fonts:/usr/local/share/fonts:ro
+    networks:
+      - webapi-network
+    restart: unless-stopped
+
 volumes:
   postgres:
 
