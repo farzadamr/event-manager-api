@@ -122,6 +122,15 @@ func (uc *CertificateUsecase) generateHTML(participant model.Registration, track
 		log.Println("Error executing template:", err)
 		return ""
 	}
+
+	filePath := fmt.Sprintf("./storage/html/cert_%d_%d.html", participant.Id, time.Now().Unix())
+	err = os.WriteFile(filePath, buf.Bytes(), 0644)
+	if err != nil {
+		log.Println("Error writing HTML file:", err)
+	} else {
+		log.Println("HTML saved to:", filePath)
+	}
+
 	return buf.String()
 }
 
