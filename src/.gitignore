@@ -19,7 +19,9 @@ profile.cov
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-
+*ttf
+*pdf
+*html
 # Go workspace file
 go.work
 go.work.sum
