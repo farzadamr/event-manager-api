@@ -163,7 +163,7 @@ func (r *RegistrationRepository) GetAllAttendedByEventId(ctx context.Context, ev
 	db = database.Preload(db, r.preloads)
 
 	err := db.
-		Where("event_id = ? AND attendance_status = PRESENT", eventID).
+		Where("event_id = ? AND attendance_status = ?", eventID, model.Present).
 		Find(&registrations).
 		Error
 	if err != nil {

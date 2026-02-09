@@ -9,7 +9,7 @@ import (
 // Create Request
 type CreateEventRequest struct {
 	Title       string    `json:"title" binding:"required,min=5,max=64"`
-	Description string    `json:"description" binding:"required,min=16,max=256"`
+	Description string    `json:"description" binding:"required,min=16,max=1024"`
 	TeacherId   int       `json:"teacher_id" binding:"required"`
 	Capacity    int       `json:"capacity" binding:"required"`
 	Date        time.Time `json:"date" binding:"required,date"`

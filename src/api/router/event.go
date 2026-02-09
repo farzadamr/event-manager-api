@@ -26,6 +26,6 @@ func Event(router *gin.RouterGroup, cfg *config.Config) {
 	userProtected.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin", "teacher", "default"}))
 	{
 		userProtected.POST("/:id/register", rh.RegisterEvent)
-		userProtected.DELETE("/:id/register", rh.CancelRegisteration)
+		userProtected.DELETE("/:id/register", rh.CancelRegistration)
 	}
 }
