@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
@@ -16,6 +18,7 @@ import (
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
 	"github.com/farzadamr/event-manager-api/pkg/pdf"
+	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 )
 
 type CertificateUsecase struct {
@@ -49,67 +52,123 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 	if err != nil {
 		return err
 	}
+	if len(participants) == 0 {
+		return &service_errors.ServiceError{EndUserMessage: "No attended participants found"}
+	}
 
-	go func() {
-		sem := make(chan struct{}, 5)
+	var certsToCreate []model.Certificate
+	for _, p := range participants {
+		certsToCreate = append(certsToCreate, model.Certificate{
+			RegistrationId: p.Id,
+			EventId:        p.EventId,
+			TrackingCode:   uc.generateTrackingCode(),
+			Status:         model.Pending,
+		})
+	}
+	if len(certsToCreate) == 0 {
+		return &service_errors.ServiceError{EndUserMessage: "No eligible participants for certificate"}
+	}
 
-		for _, p := range participants {
-			sem <- struct{}{}
+	createdCertificates, err := uc.certificateRepo.BulkCreate(ctx, certsToCreate)
+	if err != nil {
+		log.Printf("[ERROR] Failed to bulk create certificates: %v", err)
+		return err
+	}
 
-			go func(participant model.Registration) {
-				defer func() { <-sem }()
-				uc.issueOne(ctx, participant)
-			}(p)
-		}
-	}()
+	go uc.issueCertificatesAsync(eventId, createdCertificates)
 
 	return nil
 }
 
 func (uc *CertificateUsecase) IssueRegistrationCertificate(ctx context.Context, registrationId int) error {
-	registration, err := uc.registrationsRepo.FindById(ctx, registrationId)
+	certificate, err := uc.certificateRepo.GetByRegistrationId(ctx, registrationId)
+	if err != nil || certificate == nil {
+		tCode := uc.generateTrackingCode()
+		registration, err := uc.registrationsRepo.FindById(ctx, registrationId)
+		if err != nil {
+			return err
+		}
+		cert := model.Certificate{
+			RegistrationId: registration.Id,
+			EventId:        registration.EventId,
+			TrackingCode:   tCode,
+			Status:         model.Pending,
+		}
+		certificate, err = uc.certificateRepo.Create(ctx, cert)
+		if err != nil {
+			return err
+		}
+	}
+	return uc.issueCertificate(ctx, *certificate)
+}
+
+func (uc *CertificateUsecase) issueCertificatesAsync(eventId int, certificates []model.Certificate) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	sem := make(chan struct{}, 5)
+	var wg sync.WaitGroup
+	var failedCount int32
+
+	for _, c := range certificates {
+		sem <- struct{}{}
+		wg.Add(1)
+
+		go func(cert model.Certificate) {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+
+			if err := uc.issueCertificate(ctx, cert); err != nil {
+				atomic.AddInt32(&failedCount, 1)
+				log.Printf("[ERROR] Failed to issue certificate for event %d: %v", cert.Id, err)
+			}
+		}(c)
+	}
+	wg.Wait()
+	log.Printf("[INFO] Successfully issued %d certificates", len(certificates))
+}
+
+func (uc *CertificateUsecase) issueCertificate(ctx context.Context, cert model.Certificate) error {
+	certificate, err := uc.certificateRepo.GetById(ctx, cert.Id)
 	if err != nil {
 		return err
 	}
-
-	go uc.issueOne(ctx, registration)
-	return nil
-}
-
-func (uc *CertificateUsecase) issueOne(ctx context.Context, participant model.Registration) {
-	tCode := uc.generateTrackingCode()
-
+	if certificate.Status != model.Pending {
+		return &service_errors.ServiceError{EndUserMessage: "certificate already issued"}
+	}
 	//HTML
-	html := uc.generateHTML(participant, tCode)
+	html := uc.generateHTML(certificate.Registration, certificate.TrackingCode)
 	if html == "" {
-		log.Printf("[ERROR] HTML generation failed for User: %d", participant.UserId)
-		return
+		log.Printf("[ERROR] HTML generation failed for certID: %d", certificate.Id)
+		return &service_errors.ServiceError{EndUserMessage: "HTML generation failed"}
 	}
 
 	//PDF
 	pdfBytes, err := uc.pdfClient.HTMLToPDF(html)
 	if err != nil {
-		log.Printf("[ERROR] Gotenberg failed for RegID %d: %v", participant.Id, err)
-		return
+		log.Printf("[ERROR] Gotenberg failed for certID %d: %v", certificate.Id, err)
+		return &service_errors.ServiceError{EndUserMessage: "Gotenberg failed"}
 	}
 
 	//Save
-	filePath, err := uc.savePDF(pdfBytes, participant.Id)
+	filePath, err := uc.savePDF(pdfBytes, certificate.RegistrationId)
 	if err != nil {
-		return
+		return &service_errors.ServiceError{EndUserMessage: "Save PDF failed"}
 	}
 
-	//DB
-	err = uc.markAsIssued(ctx, participant.Id, filePath, tCode, pdfBytes)
-	if err != nil {
-		log.Printf("[ERROR] DB update failed for RegID %d: %v", participant.Id, err)
-		return
+	//Issue in DB
+	file := &model.FileRef{
+		Path: filePath,
+		Size: int64(len(pdfBytes)),
+		Mime: "application/pdf",
 	}
-
-	log.Printf("[MONITOR] Certificate issued for %s (ID: %d)",
-		participant.User.FirstName,
-		participant.Id,
-	)
+	err = uc.certificateRepo.MarkAsIssued(ctx, certificate.Id, file)
+	if err != nil {
+		return &service_errors.ServiceError{EndUserMessage: "Mark certificate as issued failed"}
+	}
+	return nil
 }
 
 func (uc *CertificateUsecase) generateHTML(participant model.Registration, trackingCode string) string {
@@ -138,14 +197,6 @@ func (uc *CertificateUsecase) generateHTML(participant model.Registration, track
 	if err := t.Execute(&buf, data); err != nil {
 		log.Println("Error executing template:", err)
 		return ""
-	}
-
-	filePath := fmt.Sprintf("./storage/html/cert_%d_%d.html", participant.Id, time.Now().Unix())
-	err = os.WriteFile(filePath, buf.Bytes(), 0644)
-	if err != nil {
-		log.Println("Error writing HTML file:", err)
-	} else {
-		log.Println("HTML saved to:", filePath)
 	}
 
 	return buf.String()
@@ -183,24 +234,4 @@ func (uc *CertificateUsecase) generateTrackingCode() string {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
-}
-
-func (uc *CertificateUsecase) markAsIssued(ctx context.Context, registrationId int, filePath, trackingCode string, pdfBytes []byte) error {
-	now := time.Now()
-	cert := model.Certificate{
-		RegistrationId: registrationId,
-		IssuedAt:       &now,
-		TrackingCode:   trackingCode,
-		Pdf: model.FileRef{
-			Path: filePath,
-			Size: int64(len(pdfBytes)),
-			Mime: "application/pdf",
-		},
-	}
-	_, err := uc.certificateRepo.Create(ctx, cert)
-	if err != nil {
-		log.Printf("[ERROR] Failed to save certificate to DB: %v", err)
-		return err
-	}
-	return nil
 }

@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"gorm.io/gorm"
 )
 
@@ -18,13 +20,38 @@ func NewCertificateRepository(preloads []database.PreloadEntity) *CertificateRep
 	return &CertificateRepository{database: database.GetDb(), preloads: preloads}
 }
 
-func (cr *CertificateRepository) Create(ctx context.Context, r model.Certificate) (model.Certificate, error) {
+func (cr *CertificateRepository) Create(ctx context.Context, r model.Certificate) (*model.Certificate, error) {
 	err := cr.database.WithContext(ctx).Create(&r).Error
 	if err != nil {
-		return model.Certificate{}, err
+		return &model.Certificate{}, err
 	}
-	return r, nil
+	return &r, nil
 }
+
+func (cr *CertificateRepository) BulkCreate(ctx context.Context, certs []model.Certificate) ([]model.Certificate, error) {
+	err := cr.database.WithContext(ctx).Create(&certs).Error
+	if err != nil {
+		return nil, err
+	}
+	return certs, nil
+}
+
+func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file *model.FileRef) error {
+	certificate := new(model.Certificate)
+	if err := cr.database.WithContext(ctx).First(certificate, id).Error; err != nil {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+	}
+	now := time.Now()
+	certificate.IssuedAt = &now
+	certificate.Pdf = file
+	certificate.Status = model.Issued
+
+	if err := cr.database.WithContext(ctx).Save(certificate).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (cr *CertificateRepository) GetById(ctx context.Context, id int) (model.Certificate, error) {
 	certificate := new(model.Certificate)
 
@@ -62,4 +89,28 @@ func (cr *CertificateRepository) GetByFilter(ctx context.Context, eventId int, r
 		return 0, nil, err
 	}
 	return totalRows, items, nil
+}
+
+func (cr *CertificateRepository) GetAllByEventId(ctx context.Context, eventId int) ([]model.Certificate, error) {
+	var certificates []model.Certificate
+
+	db := cr.database.WithContext(ctx)
+	db = database.Preload(db, cr.preloads)
+
+	err := db.Where("event_id = ?", eventId).Find(&certificates).Error
+	if err != nil {
+		return nil, err
+	}
+	return certificates, nil
+}
+
+func (cr *CertificateRepository) GetByRegistrationId(ctx context.Context, registrationId int) (*model.Certificate, error) {
+	certificate := new(model.Certificate)
+	db := cr.database.WithContext(ctx)
+	db = database.Preload(db, cr.preloads)
+	err := db.Where("registration_id = ?", registrationId).First(&certificate).Error
+	if err != nil {
+		return certificate, err
+	}
+	return certificate, nil
 }
