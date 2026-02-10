@@ -10,6 +10,7 @@ import (
 func Event(router *gin.RouterGroup, cfg *config.Config) {
 	h := handler.NewEventHandler(cfg)
 	rh := handler.NewRegisterHandler(cfg)
+	ch := handler.NewCertificateHandler(cfg)
 	router.GET("/:id", h.GetEventById)
 	router.GET("", h.GetEvents)
 
@@ -20,6 +21,8 @@ func Event(router *gin.RouterGroup, cfg *config.Config) {
 		adminRoutes.PATCH("/:id", h.Update)
 		adminRoutes.PATCH("/:id/status", h.ChangeEventStatus)
 		adminRoutes.DELETE("/:id", h.Delete)
+		//certificate
+		adminRoutes.GET("/:id/certificates", ch.GetByEventId)
 	}
 
 	userProtected := router.Group("")

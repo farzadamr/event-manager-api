@@ -3,6 +3,7 @@ package usecase
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -15,16 +16,21 @@ import (
 
 	"github.com/farzadamr/event-manager-api/common"
 	"github.com/farzadamr/event-manager-api/config"
+	"github.com/farzadamr/event-manager-api/constant"
+	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
 	"github.com/farzadamr/event-manager-api/pkg/pdf"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
+	"github.com/farzadamr/event-manager-api/usecase/dto"
+	"gorm.io/gorm"
 )
 
 type CertificateUsecase struct {
 	config            *config.Config
 	certificateRepo   repository.CertificateRepository
 	registrationsRepo repository.RegistrationRepository
+	userRepo          repository.UserRepository
 	pdfClient         *pdf.Client
 }
 
@@ -39,11 +45,13 @@ type CertTemplateData struct {
 func NewCertificateUsecase(cfg *config.Config,
 	certificateRepository repository.CertificateRepository,
 	registrationRepository repository.RegistrationRepository,
+	userRepo repository.UserRepository,
 	pdfClient *pdf.Client) *CertificateUsecase {
 	return &CertificateUsecase{
 		config:            cfg,
 		certificateRepo:   certificateRepository,
 		registrationsRepo: registrationRepository,
+		userRepo:          userRepo,
 		pdfClient:         pdfClient}
 }
 
@@ -75,7 +83,7 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 		return err
 	}
 
-	go uc.issueCertificatesAsync(eventId, createdCertificates)
+	go uc.issueCertificatesAsync(createdCertificates)
 
 	return nil
 }
@@ -102,7 +110,73 @@ func (uc *CertificateUsecase) IssueRegistrationCertificate(ctx context.Context, 
 	return uc.issueCertificate(ctx, *certificate)
 }
 
-func (uc *CertificateUsecase) issueCertificatesAsync(eventId int, certificates []model.Certificate) {
+func (uc *CertificateUsecase) GetListByEventId(ctx context.Context, eventId int, req filter.PaginationInput) (*filter.PagedList[dto.Certificate], error) {
+	count, certificates, err := uc.certificateRepo.GetByFilter(ctx, eventId, req)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+	}
+	dtoCertificates := dto.ToCertificateList(certificates)
+	return filter.NewPagedList(&dtoCertificates, count, req.PageNumber, int64(req.PageSize)), nil
+}
+
+func (uc *CertificateUsecase) GetCertificateFile(ctx context.Context, certID int) (string, error) {
+	userId := int(ctx.Value(constant.UserIdKey).(float64))
+	if userId == 0 {
+		return "", &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+	user, err := uc.userRepo.FetchUserInfoById(ctx, userId)
+	if err != nil {
+		return "", &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+	cert, err := uc.certificateRepo.GetById(ctx, certID)
+	if err != nil {
+		return "", &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+	}
+
+	if cert.Registration.UserId != user.Id {
+		return "", &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+
+	if cert.Status != model.Issued {
+		return "", &service_errors.ServiceError{EndUserMessage: "certificate is not issued"}
+	}
+
+	return cert.Pdf.Path, nil
+}
+
+func (uc *CertificateUsecase) GetUserCertificates(ctx context.Context, req filter.PaginationInput) (*filter.PagedList[dto.UserCertificate], error) {
+	userId := int(ctx.Value(constant.UserIdKey).(float64))
+	if userId == 0 {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+	user, err := uc.userRepo.FetchUserInfoById(ctx, userId)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+
+	count, certificates, err := uc.certificateRepo.GetByUserIdByFilter(ctx, user.Id, req)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+	}
+	dtoUserCertificates := dto.ToUserCertificateList(certificates)
+
+	return filter.NewPagedList(&dtoUserCertificates, count, req.PageNumber, int64(req.PageSize)), nil
+
+}
+
+func (uc *CertificateUsecase) VerifyCertificate(ctx context.Context, trackingCode string) (bool, *model.Certificate, error) {
+	result, err := uc.certificateRepo.VerifyCertificate(ctx, trackingCode)
+	if err != nil {
+		log.Printf("[ERROR] Failed to verify certificate: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil, &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+		}
+		return false, nil, &service_errors.ServiceError{EndUserMessage: service_errors.CertificateInvalid}
+	}
+	return true, &result, nil
+}
+
+func (uc *CertificateUsecase) issueCertificatesAsync(certificates []model.Certificate) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 

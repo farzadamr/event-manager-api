@@ -114,3 +114,47 @@ func (cr *CertificateRepository) GetByRegistrationId(ctx context.Context, regist
 	}
 	return certificate, nil
 }
+
+func (cr *CertificateRepository) GetByUserIdByFilter(ctx context.Context, userId int, req filter.PaginationInput) (int64, []model.Certificate, error) {
+	var items []model.Certificate
+	var totalRows int64 = 0
+
+	query := cr.database.WithContext(ctx).
+		Model(&model.Certificate{}).
+		Joins("JOIN registrations r ON certificates.registration_id = r.id").
+		Where("r.user_id = ?", userId).
+		Where("certificates.status = ?", model.Issued)
+
+	err := query.Count(&totalRows).Error
+	if err != nil {
+		return 0, nil, err
+	}
+
+	offset := req.GetOffset()
+	limit := req.GetPageSize()
+	err = query.
+		Preload("Registration.Event").
+		Offset(offset).
+		Limit(limit).
+		Order("certificates.created_at DESC").
+		Find(&items).Error
+	if err != nil {
+		return 0, nil, err
+	}
+	return totalRows, items, nil
+}
+
+func (cr *CertificateRepository) VerifyCertificate(ctx context.Context, trackingCode string) (model.Certificate, error) {
+	var certificate model.Certificate
+	db := cr.database.WithContext(ctx)
+	db = database.Preload(db, cr.preloads)
+
+	err := db.
+		Where("tracking_code = ? AND status = ?", trackingCode, model.Issued).
+		First(&certificate).Error
+	if err != nil {
+		return certificate, err
+	}
+	return certificate, nil
+
+}

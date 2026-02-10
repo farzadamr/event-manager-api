@@ -12,6 +12,7 @@ var StatusCodeMapping = map[string]int{
 	service_errors.StudentNumberExists: 409,
 	service_errors.RecordNotFound:      404,
 	service_errors.PermissionDenied:    403,
+	service_errors.CertificateInvalid:  422,
 }
 
 func TranslateErrorToStatusCode(err error) int {

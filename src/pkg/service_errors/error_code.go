@@ -18,4 +18,10 @@ const (
 
 	// DB
 	RecordNotFound = "record not found"
+
+	// Attendance
+	AttendanceIsNotPresent = "attendance is not present"
+
+	// Certificate
+	CertificateInvalid = "certificate invalid"
 )

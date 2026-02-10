@@ -10,9 +10,19 @@ import (
 func Certificate(r *gin.RouterGroup, cfg *config.Config) {
 	h := handler.NewCertificateHandler(cfg)
 
+	r.GET("/verify", h.VerifyCertificate)
+
 	adminRoutes := r.Group("")
 	adminRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin"}))
 	{
-		adminRoutes.POST("/issue/:eventID", h.IssueCertificates)
+		adminRoutes.POST("/issue-all/:eventID", h.IssueAllCertificates)
+		adminRoutes.POST("/issue/:registerID", h.IssueOneCertificate)
 	}
+	userRoutes := r.Group("")
+	userRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"default"}))
+	{
+		userRoutes.GET("/:id/download", h.Download)
+		userRoutes.GET("/me", h.ME)
+	}
+
 }
