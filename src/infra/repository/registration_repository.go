@@ -29,6 +29,17 @@ func (r *RegistrationRepository) Create(ctx context.Context, re model.Registrati
 	return nil
 }
 
+func (r *RegistrationRepository) FindById(ctx context.Context, id int) (model.Registration, error) {
+	var re model.Registration
+	db := r.database.WithContext(ctx)
+	db = database.Preload(db, r.preloads)
+	err := db.First(&re, id).Error
+	if err != nil {
+		return model.Registration{}, err
+	}
+	return re, nil
+}
+
 func (r *RegistrationRepository) FindByEventIDAndUserID(ctx context.Context, eventID, userID int) (model.Registration, error) {
 	var rg model.Registration
 	q := "user_id = ? and event_id = ? " + softDeleteExp

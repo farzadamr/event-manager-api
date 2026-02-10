@@ -49,50 +49,67 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 	if err != nil {
 		return err
 	}
+
 	go func() {
-		semaphore := make(chan struct{}, 5)
+		sem := make(chan struct{}, 5)
 
 		for _, p := range participants {
-			semaphore <- struct{}{}
+			sem <- struct{}{}
 
 			go func(participant model.Registration) {
-				defer func() { <-semaphore }()
-				tCode := uc.generateTrackingCode()
-
-				// ۱. تولید HTML
-				html := uc.generateHTML(participant, tCode)
-				if html == "" {
-					log.Printf("[ERROR] HTML generation failed for User: %d", participant.UserId)
-					return
-				}
-
-				// ۲. تبدیل به PDF (ارسال به Gotenberg)
-				pdfBytes, err := uc.pdfClient.HTMLToPDF(html)
-				if err != nil {
-					log.Printf("[ERROR] Gotenberg failed for RegID %d: %v", participant.Id, err)
-					// اینجا می‌توانید وضعیت را در دیتابیس به FAILED تغییر دهید
-					return
-				}
-
-				// ۳. ذخیره محلی
-				filePath, err := uc.savePDF(pdfBytes, participant.Id)
-				if err != nil {
-					// لاگ در داخل savePDF انجام می‌شود
-					return
-				}
-
-				// ۴. ثبت در دیتابیس (Repository)
-				err = uc.markAsIssued(ctx, participant.Id, filePath, tCode, pdfBytes)
-				if err != nil {
-					log.Printf("[ERROR] DB update failed for RegID %d: %v", participant.Id, err)
-					return
-				}
-
-				log.Printf("[MONITOR] Certificate successfully issued for %s (ID: %d)", participant.User.FirstName, participant.Id)
+				defer func() { <-sem }()
+				uc.issueOne(ctx, participant)
 			}(p)
 		}
 	}()
+
 	return nil
+}
+
+func (uc *CertificateUsecase) IssueRegistrationCertificate(ctx context.Context, registrationId int) error {
+	registration, err := uc.registrationsRepo.FindById(ctx, registrationId)
+	if err != nil {
+		return err
+	}
+
+	go uc.issueOne(ctx, registration)
+	return nil
+}
+
+func (uc *CertificateUsecase) issueOne(ctx context.Context, participant model.Registration) {
+	tCode := uc.generateTrackingCode()
+
+	//HTML
+	html := uc.generateHTML(participant, tCode)
+	if html == "" {
+		log.Printf("[ERROR] HTML generation failed for User: %d", participant.UserId)
+		return
+	}
+
+	//PDF
+	pdfBytes, err := uc.pdfClient.HTMLToPDF(html)
+	if err != nil {
+		log.Printf("[ERROR] Gotenberg failed for RegID %d: %v", participant.Id, err)
+		return
+	}
+
+	//Save
+	filePath, err := uc.savePDF(pdfBytes, participant.Id)
+	if err != nil {
+		return
+	}
+
+	//DB
+	err = uc.markAsIssued(ctx, participant.Id, filePath, tCode, pdfBytes)
+	if err != nil {
+		log.Printf("[ERROR] DB update failed for RegID %d: %v", participant.Id, err)
+		return
+	}
+
+	log.Printf("[MONITOR] Certificate issued for %s (ID: %d)",
+		participant.User.FirstName,
+		participant.Id,
+	)
 }
 
 func (uc *CertificateUsecase) generateHTML(participant model.Registration, trackingCode string) string {
