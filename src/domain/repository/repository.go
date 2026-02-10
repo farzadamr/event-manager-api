@@ -24,6 +24,7 @@ type EventRepository interface {
 	GetById(ctx context.Context, id int) (model.Event, error)
 	GetByFilter(ctx context.Context, req filter.PaginationInput) (int64, []model.Event, error)
 	ChangeEventStatus(ctx context.Context, id int) error
+	ChangeCapacity(ctx context.Context, id int, capacity int) error
 }
 
 type RegistrationRepository interface {

@@ -24,4 +24,7 @@ const (
 
 	// Certificate
 	CertificateInvalid = "certificate invalid"
+
+	// Registration
+	NoCapacity = "not enough capacity"
 )

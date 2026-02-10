@@ -151,3 +151,11 @@ func (r *EventRepository) ChangeEventStatus(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (r *EventRepository) ChangeCapacity(ctx context.Context, id int, capacity int) error {
+	return r.database.WithContext(ctx).
+		Model(&model.Event{}).
+		Where("id = ?", id).
+		Update("capacity", capacity).
+		Error
+}

@@ -112,3 +112,16 @@ func (u *EventUsecase) GetById(ctx context.Context, id int) (dto.EventModel, err
 	result := dto.ToEventModel(event)
 	return result, nil
 }
+
+func (u *EventUsecase) ChangeCapacity(ctx context.Context, id int, capacity int) error {
+	if id == 0 {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+	if capacity < 0 {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+	if err := u.eventRepository.ChangeCapacity(ctx, id, capacity); err != nil {
+		return err
+	}
+	return nil
+}
