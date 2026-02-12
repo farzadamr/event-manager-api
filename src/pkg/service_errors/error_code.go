@@ -18,7 +18,7 @@ const (
 
 	// DB
 	RecordNotFound = "record not found"
-
+	DuplicatedKey  = "this key is duplicated"
 	// Attendance
 	AttendanceIsNotPresent = "attendance is not present"
 

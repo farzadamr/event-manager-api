@@ -41,6 +41,9 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config) {
 		//Certificate
 		certificates := v1.Group("/certificates")
 		router.Certificate(certificates, cfg)
+		//Role
+		roles := v1.Group("/roles")
+		router.Role(roles, cfg)
 	}
 }
 

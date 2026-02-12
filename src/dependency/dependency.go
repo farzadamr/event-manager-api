@@ -11,6 +11,10 @@ func GetUserRepository() contractRepository.UserRepository {
 	return infraRepository.NewUserRepository(preloads)
 }
 
+func GetRoleRepository() contractRepository.RoleRepository {
+	return infraRepository.NewRoleRepository()
+}
+
 func GetEventRepository() contractRepository.EventRepository {
 	var preloads []database.PreloadEntity = []database.PreloadEntity{{Entity: "Teacher"}}
 	return infraRepository.NewEventRepository(preloads)

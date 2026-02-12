@@ -18,6 +18,13 @@ type UserRepository interface {
 	Update(ctx context.Context, id int, e *map[string]interface{}) (model.User, error)
 }
 
+type RoleRepository interface {
+	Create(ctx context.Context, e model.Role) error
+	Update(ctx context.Context, id int, displayName string) error
+	GetById(ctx context.Context, id int) (*model.Role, error)
+	GetAll(ctx context.Context) ([]model.Role, error)
+}
+
 type EventRepository interface {
 	Create(ctx context.Context, e model.Event) (model.Event, error)
 	Update(ctx context.Context, id int, e map[string]interface{}) (model.Event, error)
