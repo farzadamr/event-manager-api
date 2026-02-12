@@ -2,21 +2,22 @@ package model
 
 type User struct {
 	BaseModel
-	Student_Number string `gorm:"type:string;size:10;unique;not null"`
-	FirstName      string `gorm:"type:string;size:15;null"`
-	LastName       string `gorm:"type:string;size:25;null"`
-	Phone          string `gorm:"type:string;size:11;unique"`
-	Email          string `gorm:"type:string;size:64;unique"`
-	Password       string `gorm:"type:string;size:64;not null"`
-	Active         bool   `gorm:"default:true"`
-	UserRoles      []UserRole
+	StudentNumber string  `gorm:"type:string;size:10;unique;not null"`
+	FirstName     string  `gorm:"type:string;size:15;not null"`
+	LastName      string  `gorm:"type:string;size:25;not null"`
+	EnglishName   *string `gorm:"type:string;size:15;null"`
+	Phone         *string `gorm:"type:string;size:11;null"`
+	Email         string  `gorm:"type:string;size:64;unique"`
+	Password      string  `gorm:"type:string;size:64;not null"`
+	Active        bool    `gorm:"default:true"`
+	UserRoles     []UserRole
 }
 
 type Role struct {
 	BaseModel
-	Name         string `gorm:"type:string;size:25;not null;unique"`
-	Display_Name string `gorm:"type:string;size:25;not null;unique"`
-	UserRoles    []UserRole
+	Name        string `gorm:"type:string;size:25;not null;unique"`
+	DisplayName string `gorm:"type:string;size:25;not null;unique"`
+	UserRoles   []UserRole
 }
 
 type UserRole struct {

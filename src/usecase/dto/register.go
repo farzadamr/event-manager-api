@@ -31,7 +31,7 @@ func ToRegistrationDto(m model.Registration) Registration {
 		User: User{
 			Id:            m.UserId,
 			Name:          m.User.FirstName + " " + m.User.LastName,
-			StudentNumber: m.User.Student_Number,
+			StudentNumber: m.User.StudentNumber,
 		},
 		Event: Event{
 			Id:    m.EventId,

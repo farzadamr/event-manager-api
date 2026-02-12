@@ -7,7 +7,8 @@ import (
 )
 
 func GetUserRepository() contractRepository.UserRepository {
-	return infraRepository.NewUserRepository()
+	var preloads []database.PreloadEntity = []database.PreloadEntity{{Entity: "UserRole"}}
+	return infraRepository.NewUserRepository(preloads)
 }
 
 func GetEventRepository() contractRepository.EventRepository {

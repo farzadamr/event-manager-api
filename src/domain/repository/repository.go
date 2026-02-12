@@ -8,13 +8,14 @@ import (
 )
 
 type UserRepository interface {
-	ExistsMobileNumber(ctx context.Context, mobileNumber string) (bool, error)
 	ExistsStudentNumber(ctx context.Context, studentNumber string) (bool, error)
 	ExistsEmail(ctx context.Context, email string) (bool, error)
 	FetchUserInfo(ctx context.Context, studentNumber string, password string) (model.User, error)
 	FetchUserInfoById(ctx context.Context, id int) (model.User, error)
 	GetDefaultRole(ctx context.Context) (roleId int, err error)
 	CreateUser(ctx context.Context, u model.User) (model.User, error)
+	GetByRoleNameByFilter(ctx context.Context, roleName string, req filter.PaginationInput) (int64, []model.User, error)
+	Update(ctx context.Context, id int, e *map[string]interface{}) (model.User, error)
 }
 
 type EventRepository interface {

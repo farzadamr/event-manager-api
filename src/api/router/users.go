@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/farzadamr/event-manager-api/api/handler"
+	"github.com/farzadamr/event-manager-api/api/middleware"
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/gin-gonic/gin"
 )
@@ -12,4 +13,15 @@ func User(router *gin.RouterGroup, cfg *config.Config) {
 	router.POST("/login-by-student-number", h.LoginByStudentNumber)
 	router.POST("/register-by-student-number", h.RegisterByStudentNumber)
 	router.POST("/refresh-token", h.RefreshToken)
+	adminRoutes := router.Group("")
+	adminRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin"}))
+	{
+		adminRoutes.GET("/list", h.GetList)
+	}
+	userRoutes := router.Group("")
+	userRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"default"}))
+	{
+		userRoutes.PUT("/edit-profile", h.EditProfile)
+	}
+
 }

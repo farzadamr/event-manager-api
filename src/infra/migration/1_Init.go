@@ -47,15 +47,15 @@ func addNewTable(database *gorm.DB, model interface{}, tables []interface{}) []i
 }
 
 func createDefaultUserInformation(database *gorm.DB) {
-	adminRole := model.Role{Name: constant.AdminRoleName, Display_Name: constant.AdminRoleDisplayName}
+	adminRole := model.Role{Name: constant.AdminRoleName, DisplayName: constant.AdminRoleDisplayName}
 	createRoleIfNotExists(database, &adminRole)
-	teacherRole := model.Role{Name: constant.TeacherRoleName, Display_Name: constant.TeacherRoleDisplayName}
+	teacherRole := model.Role{Name: constant.TeacherRoleName, DisplayName: constant.TeacherRoleDisplayName}
 	createRoleIfNotExists(database, &teacherRole)
-	defaultRole := model.Role{Name: constant.DefaultRoleName, Display_Name: constant.DefaultRoleDisplayName}
+	defaultRole := model.Role{Name: constant.DefaultRoleName, DisplayName: constant.DefaultRoleDisplayName}
 	createRoleIfNotExists(database, &defaultRole)
-
-	u := model.User{Student_Number: constant.DefaultStudentNumber, FirstName: "Test", LastName: "Test",
-		Phone: "09120000000", Email: "test@example.com"}
+	phone := "09120000000"
+	u := model.User{StudentNumber: constant.DefaultStudentNumber, FirstName: "Test", LastName: "Test",
+		Phone: &phone, Email: "test@example.com"}
 	pass := "12345678"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	u.Password = string(hashedPassword)
@@ -68,7 +68,7 @@ func createAdminUserIfNotExists(database *gorm.DB, u *model.User, roleId int) {
 	database.
 		Model(&model.User{}).
 		Select("1").
-		Where("student_number = ?", u.Student_Number).
+		Where("student_number = ?", u.StudentNumber).
 		First(&exists)
 	if exists == 0 {
 		database.Create(u)

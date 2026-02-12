@@ -43,17 +43,17 @@ func (r *EventRepository) Update(ctx context.Context, id int, e map[string]inter
 	}
 	snakeMap["modified_by"] = &sql.NullInt64{Int64: int64(ctx.Value(constant.UserIdKey).(float64)), Valid: true}
 	snakeMap["modified_at"] = sql.NullTime{Valid: true, Time: time.Now().UTC()}
-	model := new(model.Event)
+	event := new(model.Event)
 	tx := r.database.WithContext(ctx).Begin()
-	if err := tx.Model(model).
+	if err := tx.Model(event).
 		Where(softDeleteWithIdExp, id).
 		Updates(snakeMap).
 		Error; err != nil {
 		tx.Rollback()
-		return *model, err
+		return *event, err
 	}
 	tx.Commit()
-	return *model, nil
+	return *event, nil
 }
 
 func (r *EventRepository) Delete(ctx context.Context, id int) error {
