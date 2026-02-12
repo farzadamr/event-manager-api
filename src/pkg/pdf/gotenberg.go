@@ -29,7 +29,6 @@ func (c *Client) HTMLToPDF(htmlContent string) ([]byte, error) {
 	writer.WriteField("marginBottom", "0")
 	writer.WriteField("marginLeft", "0")
 	writer.WriteField("marginRight", "0")
-	writer.WriteField("printBackground", "true")
 
 	writer.Close()
 

@@ -24,6 +24,6 @@ type CertificateMetadata struct {
 	UserName    string  `gorm:"type:varchar(32)"`
 	EnglishName *string `gorm:"type:varchar(64)"`
 	Date        string  `gorm:"type:varchar(10)"`
-	Duration    int     `gorm:"type:int(11)"`
+	Duration    string  `gorm:"type:varchar(4)"`
 	EventName   string  `gorm:"type:varchar(128)"`
 }

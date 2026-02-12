@@ -10,8 +10,9 @@ type Event struct {
 	Teacher     User    `gorm:"foreignKey:TeacherId;constraint:OnUpdate:NO ACTION;OnDelete:NO ACTION"`
 	TeacherId   int
 	Capacity    int
-	Date        time.Time `gorm:"type:TIMESTAMP with time zone;not null"`
+	StartDate   time.Time `gorm:"type:TIMESTAMP with time zone;not null"`
 	Location    string    `gorm:"type:string;size:128;not null"`
+	EndDate     time.Time `gorm:"type:TIMESTAMP with time zone;not null"`
 	Price       float64   `gorm:"type:decimal(10,2);not null"`
 	Active      bool      `gorm:"default:true"`
 }

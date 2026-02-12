@@ -11,7 +11,8 @@ type CreateEvent struct {
 	Description string
 	TeacherId   int
 	Capacity    int
-	Date        time.Time
+	StartDate   time.Time
+	EndDate     time.Time
 	Location    string
 	Price       float64
 }
@@ -22,7 +23,8 @@ type UpdateEvent struct {
 	Description *string
 	TeacherId   *int
 	Capacity    *int
-	Date        *time.Time
+	StartDate   *time.Time
+	EndDate     *time.Time
 	Location    *string
 }
 
@@ -33,7 +35,8 @@ type EventModel struct {
 	Poster_Path string
 	Teacher     TeacherModel
 	Capacity    int
-	Date        time.Time
+	StartDate   time.Time
+	EndDate     time.Time
 	Location    string
 	Price       float64
 	Active      bool
@@ -51,7 +54,8 @@ func CreateEventToEventModel(form CreateEvent) model.Event {
 		Description: form.Description,
 		TeacherId:   form.TeacherId,
 		Capacity:    form.Capacity,
-		Date:        form.Date,
+		StartDate:   form.StartDate,
+		EndDate:     form.EndDate,
 		Location:    form.Location,
 		Price:       form.Price,
 	}
@@ -72,8 +76,11 @@ func (req *UpdateEvent) ToUpdateMap() map[string]interface{} {
 	if req.Capacity != nil {
 		updates["Capacity"] = *req.Capacity
 	}
-	if req.Date != nil {
-		updates["Date"] = *req.Date
+	if req.StartDate != nil {
+		updates["StartDate"] = *req.StartDate
+	}
+	if req.EndDate != nil {
+		updates["EndDate"] = *req.EndDate
 	}
 	if req.Location != nil {
 		updates["Location"] = *req.Location
@@ -93,11 +100,12 @@ func ToEventModel(e model.Event) EventModel {
 			FirstName: e.Teacher.FirstName,
 			LastName:  e.Teacher.LastName,
 		},
-		Capacity: e.Capacity,
-		Date:     e.Date,
-		Location: e.Location,
-		Price:    e.Price,
-		Active:   e.Active,
+		Capacity:  e.Capacity,
+		StartDate: e.StartDate,
+		EndDate:   e.EndDate,
+		Location:  e.Location,
+		Price:     e.Price,
+		Active:    e.Active,
 	}
 }
 

@@ -238,12 +238,13 @@ func (uc *CertificateUsecase) issueCertificate(ctx context.Context, cert model.C
 		Size: int64(len(pdfBytes)),
 		Mime: "application/pdf",
 	}
+	duration := common.CalculateDurationString(certificate.Registration.Event.StartDate, certificate.Registration.Event.EndDate)
 	metadata := &model.CertificateMetadata{
 		UserName:    certificate.Registration.User.FirstName + " " + certificate.Registration.User.LastName,
 		EventName:   certificate.Registration.Event.Title,
 		EnglishName: certificate.Registration.User.EnglishName,
-		Date:        common.ToShamsiString(certificate.Registration.Event.Date),
-		Duration:    12,
+		Date:        common.ToShamsiString(certificate.Registration.Event.StartDate),
+		Duration:    duration,
 	}
 	err = uc.certificateRepo.MarkAsIssued(ctx, certificate.Id, file, metadata)
 	if err != nil {
@@ -259,12 +260,12 @@ func (uc *CertificateUsecase) generateHTML(participant model.Registration, track
 		log.Println("Error reading template file:", err)
 		return ""
 	}
-
+	duration := common.CalculateDurationString(participant.Event.StartDate, participant.Event.EndDate)
 	data := CertTemplateData{
 		Username:      participant.User.FirstName + " " + participant.User.LastName,
 		EventName:     participant.Event.Title,
-		Duration:      "12",
-		Date:          common.ToShamsiString(participant.Event.Date),
+		Duration:      duration,
+		Date:          common.ToShamsiString(participant.Event.StartDate),
 		CertificateID: trackingCode,
 	}
 
