@@ -52,7 +52,7 @@ type RegistrationRepository interface {
 type CertificateRepository interface {
 	Create(ctx context.Context, r model.Certificate) (*model.Certificate, error)
 	BulkCreate(ctx context.Context, certs []model.Certificate) ([]model.Certificate, error)
-	MarkAsIssued(ctx context.Context, id int, file *model.FileRef) error
+	MarkAsIssued(ctx context.Context, id int, file *model.FileRef, metadata *model.CertificateMetadata) error
 	GetById(ctx context.Context, id int) (model.Certificate, error)
 	GetByFilter(ctx context.Context, eventId int, req filter.PaginationInput) (int64, []model.Certificate, error)
 	GetAllByEventId(ctx context.Context, eventId int) ([]model.Certificate, error)

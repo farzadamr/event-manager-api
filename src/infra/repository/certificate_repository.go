@@ -36,7 +36,7 @@ func (cr *CertificateRepository) BulkCreate(ctx context.Context, certs []model.C
 	return certs, nil
 }
 
-func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file *model.FileRef) error {
+func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file *model.FileRef, metadata *model.CertificateMetadata) error {
 	certificate := new(model.Certificate)
 	if err := cr.database.WithContext(ctx).First(certificate, id).Error; err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
@@ -44,6 +44,7 @@ func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file 
 	now := time.Now()
 	certificate.IssuedAt = &now
 	certificate.Pdf = file
+	certificate.Metadata = metadata
 	certificate.Status = model.Issued
 
 	if err := cr.database.WithContext(ctx).Save(certificate).Error; err != nil {

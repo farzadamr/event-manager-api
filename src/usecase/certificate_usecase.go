@@ -238,7 +238,14 @@ func (uc *CertificateUsecase) issueCertificate(ctx context.Context, cert model.C
 		Size: int64(len(pdfBytes)),
 		Mime: "application/pdf",
 	}
-	err = uc.certificateRepo.MarkAsIssued(ctx, certificate.Id, file)
+	metadata := &model.CertificateMetadata{
+		UserName:    certificate.Registration.User.FirstName + " " + certificate.Registration.User.LastName,
+		EventName:   certificate.Registration.Event.Title,
+		EnglishName: certificate.Registration.User.EnglishName,
+		Date:        common.ToShamsiString(certificate.Registration.Event.Date),
+		Duration:    12,
+	}
+	err = uc.certificateRepo.MarkAsIssued(ctx, certificate.Id, file, metadata)
 	if err != nil {
 		return &service_errors.ServiceError{EndUserMessage: "Mark certificate as issued failed"}
 	}
