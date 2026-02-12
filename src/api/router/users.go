@@ -17,6 +17,9 @@ func User(router *gin.RouterGroup, cfg *config.Config) {
 	adminRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"admin"}))
 	{
 		adminRoutes.GET("/list", h.GetList)
+		adminRoutes.GET("/:id", h.GetById)
+		adminRoutes.POST(":id/assign-roles", h.AssignRoles)
+		adminRoutes.POST(":id/revoke-roles", h.RevokeRoles)
 	}
 	userRoutes := router.Group("")
 	userRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"default"}))

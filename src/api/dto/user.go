@@ -36,3 +36,8 @@ type UpdateUserRequest struct {
 	EnglishName *string `json:"englishName" binding:"min=3,max=32"`
 	Phone       *string `json:"phone" binding:"mobile"`
 }
+
+type RoleToUserRequest struct {
+	UserId  int   `json:"user_id" binding:"required"`
+	RoleIds []int `json:"role_ids" binding:"required"`
+}

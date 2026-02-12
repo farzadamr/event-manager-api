@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -23,7 +24,7 @@ type UserHandler struct {
 }
 
 func NewUserHandler(cfg *config.Config) *UserHandler {
-	userUsecase := usecase.NewUserUsecase(cfg, dependency.GetUserRepository())
+	userUsecase := usecase.NewUserUsecase(cfg, dependency.GetUserRepository(), dependency.GetRoleRepository())
 	tokenUsecase := usecase.NewTokenUsecase(cfg)
 	return &UserHandler{
 		userUsecase:  userUsecase,
@@ -100,6 +101,27 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, helper.GenerateBaseResponse(token, true))
 }
 
+func (h *UserHandler) GetById(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, errors.New("event id required")))
+		return
+	}
+	userID, err := strconv.Atoi(id)
+	if err != nil || userID < 1 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, errors.New("invalid event id")))
+		return
+	}
+
+	user, err := h.userUsecase.GetById(c.Request.Context(), userID)
+	if err != nil {
+		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err), helper.GenerateBaseResponseWithError(nil, false, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, helper.GenerateBaseResponse(user, false))
+}
+
 func (h *UserHandler) GetList(c *gin.Context) {
 	roleName := c.DefaultQuery("role", "default")
 	if err := h.userUsecase.ValidateRoleName(roleName); err != nil {
@@ -156,5 +178,39 @@ func (h *UserHandler) EditProfile(c *gin.Context) {
 			helper.GenerateBaseResponseWithError(nil, false, err))
 		return
 	}
+	c.JSON(http.StatusOK, helper.GenerateBaseResponse(nil, true))
+}
+
+func (h *UserHandler) AssignRoles(c *gin.Context) {
+	var req dto.RoleToUserRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, err))
+		return
+	}
+
+	user, err := h.userUsecase.AssignRoles(c.Request.Context(), req.UserId, req.RoleIds)
+	if err != nil {
+		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err), helper.GenerateBaseResponseWithError(nil, false, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, helper.GenerateBaseResponse(user, true))
+}
+
+func (h *UserHandler) RevokeRoles(c *gin.Context) {
+	var req dto.RoleToUserRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, err))
+		return
+	}
+
+	err = h.userUsecase.RevokeRoles(c.Request.Context(), req.UserId, req.RoleIds)
+	if err != nil {
+		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err), helper.GenerateBaseResponseWithError(nil, false, err))
+		return
+	}
+
 	c.JSON(http.StatusOK, helper.GenerateBaseResponse(nil, true))
 }

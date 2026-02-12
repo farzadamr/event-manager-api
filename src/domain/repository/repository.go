@@ -16,6 +16,8 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, u model.User) (model.User, error)
 	GetByRoleNameByFilter(ctx context.Context, roleName string, req filter.PaginationInput) (int64, []model.User, error)
 	Update(ctx context.Context, id int, e *map[string]interface{}) (model.User, error)
+	AddRolesToUser(ctx context.Context, userId int, roles []int) (model.User, error)
+	RemoveRolesFromUser(ctx context.Context, userId int, roles []int) error
 }
 
 type RoleRepository interface {

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/farzadamr/event-manager-api/config"
@@ -12,19 +13,22 @@ import (
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserUsecase struct {
-	cfg          *config.Config
-	repository   repository.UserRepository
-	tokenUsecase *TokenUsecase
+	cfg            *config.Config
+	repository     repository.UserRepository
+	roleRepository repository.RoleRepository
+	tokenUsecase   *TokenUsecase
 }
 
-func NewUserUsecase(cfg *config.Config, repository repository.UserRepository) *UserUsecase {
+func NewUserUsecase(cfg *config.Config, repository repository.UserRepository, roleRepo repository.RoleRepository) *UserUsecase {
 	return &UserUsecase{
-		cfg:          cfg,
-		repository:   repository,
-		tokenUsecase: NewTokenUsecase(cfg),
+		cfg:            cfg,
+		repository:     repository,
+		roleRepository: roleRepo,
+		tokenUsecase:   NewTokenUsecase(cfg),
 	}
 }
 
@@ -112,6 +116,42 @@ func (u *UserUsecase) Update(ctx context.Context, req dto.UpdateUserDto) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (u *UserUsecase) GetById(ctx context.Context, id int) (*dto.UserDto, error) {
+	user, err := u.repository.FetchUserInfoById(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
+		}
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+	userDto := dto.ToUserDto(user)
+	return &userDto, nil
+}
+
+func (u *UserUsecase) AssignRoles(ctx context.Context, userId int, roleIds []int) (*dto.UserDto, error) {
+	for _, rId := range roleIds {
+		_, err := u.roleRepository.GetById(ctx, rId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	updatedUser, err := u.repository.AddRolesToUser(ctx, userId, roleIds)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+	userDto := dto.ToUserDto(updatedUser)
+	return &userDto, nil
+}
+
+func (u *UserUsecase) RevokeRoles(ctx context.Context, userId int, roleIds []int) error {
+	err := u.repository.RemoveRolesFromUser(ctx, userId, roleIds)
+	if err != nil {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+	//log
 	return nil
 }
 

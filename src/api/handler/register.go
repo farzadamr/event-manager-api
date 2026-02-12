@@ -20,7 +20,8 @@ type RegisterHandler struct {
 
 func NewRegisterHandler(cfg *config.Config) *RegisterHandler {
 	userRepository := dependency.GetUserRepository()
-	registerUsecase := usecase.NewRegisterEventUsecase(cfg, dependency.GetRegisterEventRepository(), userRepository)
+	eventRepository := dependency.GetEventRepository()
+	registerUsecase := usecase.NewRegisterEventUsecase(cfg, dependency.GetRegisterEventRepository(), userRepository, eventRepository)
 	return &RegisterHandler{registerUsecase: registerUsecase, config: cfg}
 }
 

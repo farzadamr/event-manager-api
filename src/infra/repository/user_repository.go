@@ -173,3 +173,41 @@ func (r *UserRepository) Update(ctx context.Context, id int, e *map[string]inter
 	tx.Commit()
 	return *user, nil
 }
+
+func (r *UserRepository) AddRolesToUser(ctx context.Context, userId int, roleIds []int) (model.User, error) {
+	var user model.User
+
+	db := r.database.WithContext(ctx)
+	db = database.Preload(db, r.preloads)
+
+	if err := db.First(&user, userId).Error; err != nil {
+		return user, err
+	}
+
+	var roles []model.Role
+	if err := db.Find(&roles, roleIds).Error; err != nil {
+		return user, err
+	}
+
+	err := db.Model(&user).Association("Roles").Append(roles)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+func (r *UserRepository) RemoveRolesFromUser(ctx context.Context, userId int, roleIds []int) error {
+	var user model.User
+
+	user.Id = userId
+
+	var roles []model.Role
+	for _, id := range roleIds {
+		roles = append(roles, model.Role{BaseModel: model.BaseModel{Id: id}})
+	}
+
+	err := r.database.WithContext(ctx).Model(&user).Association("Roles").Delete(roles)
+	if err != nil {
+		return err
+	}
+	return nil
+}
