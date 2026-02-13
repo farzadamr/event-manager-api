@@ -2,25 +2,32 @@ package api
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/farzadamr/event-manager-api/api/middleware"
 	"github.com/farzadamr/event-manager-api/api/router"
 	"github.com/farzadamr/event-manager-api/api/validation"
 	"github.com/farzadamr/event-manager-api/config"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
+
+var logger = logging.NewLogger(config.GetConfig())
 
 func InitServer(cfg *config.Config) {
 	gin.SetMode(cfg.Server.RunMode)
 	r := gin.New()
 	RegisterValidators()
 
+	r.Use(middleware.DefaultStructuredLogger(cfg))
+	r.Use(gin.Logger())
+
 	RegisterRoutes(r, cfg)
+	logger.Info(logging.General, logging.Startup, "Started", nil)
 	err := r.Run(fmt.Sprintf(":%s", cfg.Server.InternalPort))
 	if err != nil {
-		log.Fatalf("failed to run server: %v", err)
+		logger.Fatal(logging.General, logging.Startup, err.Error(), nil)
 	}
 }
 
@@ -52,15 +59,15 @@ func RegisterValidators() {
 	if ok {
 		err := val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
 		if err != nil {
-			log.Fatalf("Unable to register validator -> %s", err.Error())
+			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
 		}
 		err = val.RegisterValidation("password", validation.PasswordValidator, true)
 		if err != nil {
-			log.Fatalf("Unable to register validator -> %s", err.Error())
+			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
 		}
 		err = val.RegisterValidation("date", validation.DateValidator, true)
 		if err != nil {
-			log.Fatalf("Unable to register validator -> %s", err.Error())
+			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
 		}
 	}
 }
