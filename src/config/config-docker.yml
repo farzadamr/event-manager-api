@@ -5,6 +5,11 @@ server:
   domain: localhost
 cors:
   allowOrigins: "*"
+logger:
+  filePath: /app/logs/
+  encoding: json
+  level: debug
+  logger: zap
 postgres:
   host: postgres_container
   port: 5432

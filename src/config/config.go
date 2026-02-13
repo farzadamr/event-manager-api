@@ -14,6 +14,7 @@ type Config struct {
 	Postgres PostgresConfig
 	Password PasswordConfig
 	Cors     CorsConfig
+	Logger   LoggerConfig
 	JWT      JWTConfig
 	Pdf      PdfConfig
 }
@@ -48,6 +49,13 @@ type PasswordConfig struct {
 
 type CorsConfig struct {
 	AllowOrigins string
+}
+
+type LoggerConfig struct {
+	FilePath string
+	Encoding string
+	Level    string
+	Logger   string
 }
 
 type JWTConfig struct {
