@@ -10,6 +10,7 @@ import (
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
 	"golang.org/x/crypto/bcrypt"
@@ -20,6 +21,7 @@ type UserUsecase struct {
 	cfg            *config.Config
 	repository     repository.UserRepository
 	roleRepository repository.RoleRepository
+	logger         logging.Logger
 	tokenUsecase   *TokenUsecase
 }
 
@@ -28,6 +30,7 @@ func NewUserUsecase(cfg *config.Config, repository repository.UserRepository, ro
 		cfg:            cfg,
 		repository:     repository,
 		roleRepository: roleRepo,
+		logger:         logging.NewLogger(cfg),
 		tokenUsecase:   NewTokenUsecase(cfg),
 	}
 }
@@ -142,6 +145,7 @@ func (u *UserUsecase) AssignRoles(ctx context.Context, userId int, roleIds []int
 	if err != nil {
 		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
 	}
+	u.logger.Infof("User %v assigned roles %v", userId, roleIds)
 	userDto := dto.ToUserDto(updatedUser)
 	return &userDto, nil
 }
@@ -151,7 +155,7 @@ func (u *UserUsecase) RevokeRoles(ctx context.Context, userId int, roleIds []int
 	if err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
 	}
-	//log
+	u.logger.Infof("User %v revoked roles %v", userId, roleIds)
 	return nil
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
 	"gorm.io/gorm"
@@ -16,11 +17,16 @@ import (
 
 type RoleUsecase struct {
 	cfg            *config.Config
+	logger         logging.Logger
 	roleRepository repository.RoleRepository
 }
 
-func NewRoleUsecase(cfg *config.Config, roleRepository repository.RoleRepository) *RoleUsecase {
-	return &RoleUsecase{cfg, roleRepository}
+func NewRoleUsecase(cfg *config.Config, roleRepo repository.RoleRepository) *RoleUsecase {
+	return &RoleUsecase{
+		cfg:            cfg,
+		logger:         logging.NewLogger(cfg),
+		roleRepository: roleRepo,
+	}
 }
 
 func (u *RoleUsecase) Create(ctx context.Context, req dto.CreateRole) error {
@@ -30,7 +36,6 @@ func (u *RoleUsecase) Create(ctx context.Context, req dto.CreateRole) error {
 	}
 	err := u.roleRepository.Create(ctx, role)
 	if err != nil {
-		log.Println(err)
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return &service_errors.ServiceError{EndUserMessage: service_errors.DuplicatedKey}
 		}

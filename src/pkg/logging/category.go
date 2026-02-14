@@ -29,15 +29,15 @@ const (
 	BulkInsert SubCategory = "BulkInsert"
 
 	// Internal
-	Api                      SubCategory = "Api"
-	HashPassword             SubCategory = "HashPassword"
-	DefaultRoleNotFound      SubCategory = "DefaultRoleNotFound"
-	FailedToCreateUser       SubCategory = "FailedToCreateUser"
-	FailedToIssueCertificate SubCategory = "FailedToIssueCertificate"
-
+	Api                       SubCategory = "Api"
+	HashPassword              SubCategory = "HashPassword"
+	FailedToIssueCertificate  SubCategory = "FailedToIssueCertificate"
+	FailedToVerifyCertificate SubCategory = "FailedToVerifyCertificate"
+	NoCapacity                SubCategory = "NoCapacity"
 	// Validation
 	MobileValidation   SubCategory = "MobileValidation"
 	PasswordValidation SubCategory = "PasswordValidation"
+	Permission         SubCategory = "Permission"
 
 	// IO
 	SaveFile SubCategory = "SaveFile"

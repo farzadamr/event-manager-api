@@ -7,21 +7,28 @@ import (
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
+	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"gorm.io/gorm"
 )
 
 type EventRepository struct {
 	database *gorm.DB
+	logger   logging.Logger
 	preloads []database.PreloadEntity
 }
 
-func NewEventRepository(preloads []database.PreloadEntity) *EventRepository {
-	return &EventRepository{database: database.GetDb(), preloads: preloads}
+func NewEventRepository(cfg *config.Config, preloads []database.PreloadEntity) *EventRepository {
+	return &EventRepository{
+		database: database.GetDb(),
+		logger:   logging.NewLogger(cfg),
+		preloads: preloads,
+	}
 }
 
 func (r *EventRepository) Create(ctx context.Context, e model.Event) (model.Event, error) {
@@ -30,6 +37,7 @@ func (r *EventRepository) Create(ctx context.Context, e model.Event) (model.Even
 		Create(&e).Error
 	if err != nil {
 		tx.Rollback()
+		r.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
 		return model.Event{}, err
 	}
 	tx.Commit()
@@ -49,6 +57,7 @@ func (r *EventRepository) Update(ctx context.Context, id int, e map[string]inter
 		Where(softDeleteWithIdExp, id).
 		Updates(snakeMap).
 		Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		tx.Rollback()
 		return *event, err
 	}
@@ -65,6 +74,7 @@ func (r *EventRepository) Delete(ctx context.Context, id int) error {
 		return err
 	}
 	if event.CreatedBy != int(ctx.Value(constant.UserIdKey).(float64)) {
+		r.logger.Error(logging.Validation, logging.Permission, service_errors.PermissionDenied, nil)
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 	tx := r.database.WithContext(ctx).Begin()
@@ -82,6 +92,7 @@ func (r *EventRepository) Delete(ctx context.Context, id int) error {
 		Where(softDeleteWithIdExp, id).
 		Updates(deleteMap).
 		RowsAffected; cnt == 0 {
+		r.logger.Error(logging.Postgres, logging.Update, service_errors.RecordNotFound, nil)
 		tx.Rollback()
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
@@ -130,6 +141,7 @@ func (r *EventRepository) GetByFilter(ctx context.Context, req filter.Pagination
 		Limit(limit).
 		Where("active = ? and deleted_by is null", true).
 		Find(&items).Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return 0, nil, err
 	}
 	return totalRows, items, nil
@@ -140,22 +152,23 @@ func (r *EventRepository) ChangeEventStatus(ctx context.Context, id int) error {
 	if err := r.database.WithContext(ctx).First(event, id).Error; err != nil {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
-	userId := ctx.Value(constant.UserIdKey).(float64)
-	if event.CreatedBy != int(userId) {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
-	}
 	event.Active = !event.Active
 
 	if err := r.database.WithContext(ctx).Save(event).Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return err
 	}
 	return nil
 }
 
 func (r *EventRepository) ChangeCapacity(ctx context.Context, id int, capacity int) error {
-	return r.database.WithContext(ctx).
+	if err := r.database.WithContext(ctx).
 		Model(&model.Event{}).
 		Where("id = ?", id).
 		Update("capacity", capacity).
-		Error
+		Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
+		return err
+	}
+	return nil
 }

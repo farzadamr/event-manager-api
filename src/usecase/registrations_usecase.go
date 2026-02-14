@@ -7,18 +7,25 @@ import (
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/repository"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
 )
 
 type RegistrationUseCase struct {
 	config       *config.Config
+	logger       logging.Logger
 	registerRepo repository.RegistrationRepository
 	userRepo     repository.UserRepository
 }
 
 func NewRegistrationUseCase(cfg *config.Config, RegisterRepo repository.RegistrationRepository, userRepo repository.UserRepository) *RegistrationUseCase {
-	return &RegistrationUseCase{config: cfg, registerRepo: RegisterRepo, userRepo: userRepo}
+	return &RegistrationUseCase{
+		config:       cfg,
+		logger:       logging.NewLogger(cfg),
+		registerRepo: RegisterRepo,
+		userRepo:     userRepo,
+	}
 }
 
 // TODO: implement ownership checker for teacher role => teachers can only access their own events to update and get attendance list.
@@ -59,6 +66,7 @@ func (u *RegistrationUseCase) UpdateAttendanceList(ctx context.Context, attendan
 		}
 	}
 	if !hasValidRole {
+		u.logger.Error(logging.Validation, logging.Permission, "", nil)
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 

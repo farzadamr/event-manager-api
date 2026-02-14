@@ -4,25 +4,33 @@ import (
 	"context"
 	"time"
 
+	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"gorm.io/gorm"
 )
 
 type CertificateRepository struct {
 	database *gorm.DB
+	logger   logging.Logger
 	preloads []database.PreloadEntity
 }
 
-func NewCertificateRepository(preloads []database.PreloadEntity) *CertificateRepository {
-	return &CertificateRepository{database: database.GetDb(), preloads: preloads}
+func NewCertificateRepository(cfg *config.Config, preloads []database.PreloadEntity) *CertificateRepository {
+	return &CertificateRepository{
+		database: database.GetDb(),
+		logger:   logging.NewLogger(cfg),
+		preloads: preloads,
+	}
 }
 
 func (cr *CertificateRepository) Create(ctx context.Context, r model.Certificate) (*model.Certificate, error) {
 	err := cr.database.WithContext(ctx).Create(&r).Error
 	if err != nil {
+		cr.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
 		return &model.Certificate{}, err
 	}
 	return &r, nil
@@ -31,6 +39,7 @@ func (cr *CertificateRepository) Create(ctx context.Context, r model.Certificate
 func (cr *CertificateRepository) BulkCreate(ctx context.Context, certs []model.Certificate) ([]model.Certificate, error) {
 	err := cr.database.WithContext(ctx).Create(&certs).Error
 	if err != nil {
+		cr.logger.Error(logging.Postgres, logging.BulkInsert, err.Error(), nil)
 		return nil, err
 	}
 	return certs, nil
@@ -39,6 +48,7 @@ func (cr *CertificateRepository) BulkCreate(ctx context.Context, certs []model.C
 func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file *model.FileRef, metadata *model.CertificateMetadata) error {
 	certificate := new(model.Certificate)
 	if err := cr.database.WithContext(ctx).First(certificate, id).Error; err != nil {
+		cr.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
 	now := time.Now()
@@ -48,6 +58,7 @@ func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file 
 	certificate.Status = model.Issued
 
 	if err := cr.database.WithContext(ctx).Save(certificate).Error; err != nil {
+		cr.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
 		return err
 	}
 	return nil
@@ -154,6 +165,7 @@ func (cr *CertificateRepository) VerifyCertificate(ctx context.Context, tracking
 		Where("tracking_code = ? AND status = ?", trackingCode, model.Issued).
 		First(&certificate).Error
 	if err != nil {
+		cr.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return certificate, err
 	}
 	return certificate, nil

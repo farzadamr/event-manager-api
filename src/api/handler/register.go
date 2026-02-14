@@ -58,7 +58,7 @@ func (h *RegisterHandler) CancelRegistration(c *gin.Context) {
 		return
 	}
 	userId := int(c.Value(constant.UserIdKey).(float64))
-	err = h.registerUsecase.CancelRegisteration(c, eventID, userId)
+	err = h.registerUsecase.CancelRegistration(c, eventID, userId)
 	if err != nil {
 		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err), helper.GenerateBaseResponseWithError(nil, false, err))
 		return

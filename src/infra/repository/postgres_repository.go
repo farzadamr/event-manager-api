@@ -6,8 +6,11 @@ import (
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
+	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
+	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"gorm.io/gorm"
 )
 
@@ -16,11 +19,13 @@ const softDeleteExp = "and deleted_by is null"
 
 type BaseRepository[TEntity any] struct {
 	database *gorm.DB
+	logger   logging.Logger
 }
 
-func NewBaseRepository[TEntity any]() *BaseRepository[TEntity] {
+func NewBaseRepository[TEntity any](cfg *config.Config) *BaseRepository[TEntity] {
 	return &BaseRepository[TEntity]{
 		database: database.GetDb(),
+		logger:   logging.NewLogger(cfg),
 	}
 }
 
@@ -31,7 +36,7 @@ func (r *BaseRepository[TEntity]) Create(ctx context.Context, entity TEntity) (T
 		Create(entity).Error
 	if err != nil {
 		tx.Rollback()
-		// log
+		r.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
 		return entity, err
 	}
 	tx.Commit()
@@ -50,7 +55,7 @@ func (r *BaseRepository[TEntity]) Update(ctx context.Context, id int, entity map
 		Where(softDeleteWithIdExp, id).
 		Updates(snakeMap).Error; err != nil {
 		tx.Rollback()
-		// log
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return *model, err
 	}
 	tx.Commit()
@@ -73,8 +78,7 @@ func (r *BaseRepository[TEntity]) Delete(ctx context.Context, id int) error {
 		Where(softDeleteWithIdExp, id).
 		Updates(deleteMap).RowsAffected; cnt == 0 {
 		tx.Rollback()
-		// log
-		//TODO : Service Error
+		r.logger.Error(logging.Postgres, logging.Update, service_errors.RecordNotFound, nil)
 		return gorm.ErrRecordNotFound
 	}
 	tx.Commit()

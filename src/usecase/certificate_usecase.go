@@ -20,6 +20,7 @@ import (
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/domain/repository"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/pdf"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
@@ -28,6 +29,7 @@ import (
 
 type CertificateUsecase struct {
 	config            *config.Config
+	logger            logging.Logger
 	certificateRepo   repository.CertificateRepository
 	registrationsRepo repository.RegistrationRepository
 	userRepo          repository.UserRepository
@@ -49,6 +51,7 @@ func NewCertificateUsecase(cfg *config.Config,
 	pdfClient *pdf.Client) *CertificateUsecase {
 	return &CertificateUsecase{
 		config:            cfg,
+		logger:            logging.NewLogger(cfg),
 		certificateRepo:   certificateRepository,
 		registrationsRepo: registrationRepository,
 		userRepo:          userRepo,
@@ -79,7 +82,6 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 
 	createdCertificates, err := uc.certificateRepo.BulkCreate(ctx, certsToCreate)
 	if err != nil {
-		log.Printf("[ERROR] Failed to bulk create certificates: %v", err)
 		return err
 	}
 
@@ -196,12 +198,12 @@ func (uc *CertificateUsecase) issueCertificatesAsync(certificates []model.Certif
 
 			if err := uc.issueCertificate(ctx, cert); err != nil {
 				atomic.AddInt32(&failedCount, 1)
-				log.Printf("[ERROR] Failed to issue certificate for event %d: %v", cert.Id, err)
+				uc.logger.Warnf("[CERT] Failed to issue certificate for event %d: %v", cert.Id, err)
 			}
 		}(c)
 	}
 	wg.Wait()
-	log.Printf("[INFO] Successfully issued %d certificates", len(certificates))
+	uc.logger.Infof("[CERT] Successfully issued %d certificates", len(certificates))
 }
 
 func (uc *CertificateUsecase) issueCertificate(ctx context.Context, cert model.Certificate) error {

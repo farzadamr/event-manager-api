@@ -6,24 +6,31 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"gorm.io/gorm"
 )
 
 type RegistrationRepository struct {
 	database *gorm.DB
+	logger   logging.Logger
 	preloads []database.PreloadEntity
 }
 
-func NewRegistrationRepository(preloads []database.PreloadEntity) *RegistrationRepository {
-	return &RegistrationRepository{database: database.GetDb(), preloads: preloads}
+func NewRegistrationRepository(cfg *config.Config, preloads []database.PreloadEntity) *RegistrationRepository {
+	return &RegistrationRepository{
+		database: database.GetDb(),
+		logger:   logging.NewLogger(cfg),
+		preloads: preloads}
 }
 
 func (r *RegistrationRepository) Create(ctx context.Context, re model.Registration) error {
 	err := r.database.WithContext(ctx).Create(&re).Error
 	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
 		return err
 	}
 	return nil
@@ -35,6 +42,7 @@ func (r *RegistrationRepository) FindById(ctx context.Context, id int) (model.Re
 	db = database.Preload(db, r.preloads)
 	err := db.First(&re, id).Error
 	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return model.Registration{}, err
 	}
 	return re, nil
@@ -119,6 +127,7 @@ func (r *RegistrationRepository) CancelByUser(ctx context.Context, eventID, user
 		Update("status", model.StatusCancelledByUser)
 
 	if result.Error != nil {
+		r.logger.Error(logging.Postgres, logging.Update, result.Error.Error(), nil)
 		return result.Error
 	}
 
@@ -137,6 +146,7 @@ func (r *RegistrationRepository) CancelByEvent(ctx context.Context, eventID int)
 		Update("status", model.StatusCancelledByEvent)
 
 	if err := result.Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return err
 	}
 
@@ -164,7 +174,11 @@ func (r *RegistrationRepository) UpdateAttendanceList(ctx context.Context, atten
 		WHERE registrations.id = v.id AND registrations.deleted_at IS NULL`,
 		strings.Join(valuesClause, ","))
 
-	return r.database.WithContext(ctx).Exec(query, args...).Error
+	if err := r.database.WithContext(ctx).Exec(query, args...).Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
+		return err
+	}
+	return nil
 }
 
 func (r *RegistrationRepository) GetAllAttendedByEventId(ctx context.Context, eventID int) ([]model.Registration, error) {

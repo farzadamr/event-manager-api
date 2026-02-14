@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
+	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -22,11 +24,15 @@ const (
 
 type UserRepository struct {
 	database *gorm.DB
+	logger   logging.Logger
 	preloads []database.PreloadEntity
 }
 
-func NewUserRepository(preloads []database.PreloadEntity) *UserRepository {
-	return &UserRepository{database: database.GetDb(), preloads: preloads}
+func NewUserRepository(cfg *config.Config, preloads []database.PreloadEntity) *UserRepository {
+	return &UserRepository{database: database.GetDb(),
+		logger:   logging.NewLogger(cfg),
+		preloads: preloads,
+	}
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, u model.User) (model.User, error) {
@@ -38,11 +44,13 @@ func (r *UserRepository) CreateUser(ctx context.Context, u model.User) (model.Us
 	err = tx.Create(&u).Error
 	if err != nil {
 		tx.Rollback()
+		r.logger.Error(logging.Postgres, logging.Rollback, err.Error(), nil)
 		return u, err
 	}
 	err = tx.Create(&model.UserRole{UserId: u.Id, RoleId: roleId}).Error
 	if err != nil {
 		tx.Rollback()
+		r.logger.Error(logging.Postgres, logging.Rollback, err.Error(), nil)
 		return u, err
 	}
 	tx.Commit()
@@ -78,6 +86,7 @@ func (r *UserRepository) ExistsEmail(ctx context.Context, email string) (bool, e
 		Where("email = ?", email).
 		Find(&exists).
 		Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return false, err
 	}
 	return exists, nil
@@ -90,6 +99,7 @@ func (r *UserRepository) ExistsStudentNumber(ctx context.Context, studentNumber 
 		Where(userFilterExp, studentNumber).
 		Find(&exists).
 		Error; err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return false, err
 	}
 	return exists, nil
@@ -168,6 +178,7 @@ func (r *UserRepository) Update(ctx context.Context, id int, e *map[string]inter
 		Updates(snakeMap).
 		Error; err != nil {
 		tx.Rollback()
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return *user, err
 	}
 	tx.Commit()
@@ -191,6 +202,7 @@ func (r *UserRepository) AddRolesToUser(ctx context.Context, userId int, roleIds
 
 	err := db.Model(&user).Association("Roles").Append(roles)
 	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return user, err
 	}
 	return user, nil
@@ -207,6 +219,7 @@ func (r *UserRepository) RemoveRolesFromUser(ctx context.Context, userId int, ro
 
 	err := r.database.WithContext(ctx).Model(&user).Association("Roles").Delete(roles)
 	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
 		return err
 	}
 	return nil

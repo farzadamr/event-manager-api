@@ -8,6 +8,7 @@ import (
 	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/repository"
+	"github.com/farzadamr/event-manager-api/pkg/logging"
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"github.com/farzadamr/event-manager-api/usecase/dto"
 	"gorm.io/gorm"
@@ -15,12 +16,18 @@ import (
 
 type EventUsecase struct {
 	cfg             *config.Config
+	logger          logging.Logger
 	eventRepository repository.EventRepository
 	userRepository  repository.UserRepository
 }
 
 func NewEventUsecase(cfg *config.Config, eventRepo repository.EventRepository, userRepo repository.UserRepository) *EventUsecase {
-	return &EventUsecase{cfg: cfg, eventRepository: eventRepo, userRepository: userRepo}
+	return &EventUsecase{
+		cfg:             cfg,
+		logger:          logging.NewLogger(cfg),
+		eventRepository: eventRepo,
+		userRepository:  userRepo,
+	}
 }
 
 func (u *EventUsecase) PublishEvent(ctx context.Context, req dto.CreateEvent) error {
@@ -36,6 +43,7 @@ func (u *EventUsecase) PublishEvent(ctx context.Context, req dto.CreateEvent) er
 		}
 	}
 	if !hasValidRole {
+		u.logger.Error(logging.Validation, logging.Permission, "", nil)
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 	_, err = u.eventRepository.Create(ctx, dto.CreateEventToEventModel(req))
@@ -57,6 +65,7 @@ func (u *EventUsecase) Update(ctx context.Context, req dto.UpdateEvent) error {
 
 	userId, _ := ctx.Value(constant.UserIdKey).(float64)
 	if event.CreatedBy != int(userId) {
+		u.logger.Error(logging.Validation, logging.Permission, "", nil)
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
 
