@@ -37,7 +37,7 @@ func (r *RoleRepository) Update(ctx context.Context, id int, displayName string)
 	db := r.database.WithContext(ctx)
 	res := db.Model(&model.Role{}).
 		Where("id = ?", id).
-		Updates(model.Role{Name: displayName})
+		Updates(model.Role{DisplayName: displayName})
 	if res.Error != nil {
 		r.logger.Error(logging.Postgres, logging.Update, res.Error.Error(), nil)
 		return res.Error

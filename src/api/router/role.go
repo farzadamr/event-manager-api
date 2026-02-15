@@ -16,6 +16,6 @@ func Role(r *gin.RouterGroup, cfg *config.Config) {
 		routes.POST("/", h.CreateRole)
 		routes.GET("/:id", h.GetById)
 		routes.GET("/", h.GetAll)
-		routes.PUT("/:id", h.UpdateRole)
+		routes.PUT("/", h.UpdateRole)
 	}
 }

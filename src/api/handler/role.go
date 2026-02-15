@@ -53,7 +53,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetById(c *gin.Context) {
-	id := c.Param("eventID")
+	id := c.Param("id")
 	if id == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, errors.New("event id required")))
 		return
