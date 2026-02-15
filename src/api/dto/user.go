@@ -8,7 +8,7 @@ type RegisterUserByStudentNumberRequest struct {
 	StudentNumber string `json:"student_number" binding:"required,min=10,max=10"`
 	EnglishName   string `json:"english_name" binding:"min=3,max=30"`
 	PhoneNumber   string `json:"phone_number" binding:"mobile,min=11,max=11"`
-	Email         string `json:"email" binding:"email,min=6.max=32"`
+	Email         string `json:"email" binding:"email,min=6,max=32"`
 	Password      string `json:"password" binding:"required,password,min=6,max=16"`
 }
 type LoginByStudentNumberRequest struct {
@@ -30,11 +30,11 @@ func (from RegisterUserByStudentNumberRequest) ToRegisterUserByStudentNumber() u
 
 type UpdateUserRequest struct {
 	Id          int     `json:"id" binding:"required"`
-	FirstName   *string `json:"firstName" binding:"min=3,max=16"`
-	LastName    *string `json:"lastName" binding:"min=3,max=16"`
-	Email       *string `json:"email" binding:"email,min=6,max=32"`
-	EnglishName *string `json:"englishName" binding:"min=3,max=32"`
-	Phone       *string `json:"phone" binding:"mobile"`
+	FirstName   *string `json:"firstName" binding:"omitempty,min=3,max=16"`
+	LastName    *string `json:"lastName" binding:"omitempty,min=3,max=16"`
+	Email       *string `json:"email" binding:"omitempty,email,min=6,max=32"`
+	EnglishName *string `json:"englishName" binding:"omitempty,min=3,max=32"`
+	Phone       *string `json:"phone" binding:"omitempty,mobile"`
 }
 
 type RoleToUserRequest struct {

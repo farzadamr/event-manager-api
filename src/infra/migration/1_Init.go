@@ -56,7 +56,7 @@ func createDefaultUserInformation(database *gorm.DB) {
 	phone := "09120000000"
 	u := model.User{StudentNumber: constant.DefaultStudentNumber, FirstName: "Test", LastName: "Test",
 		Phone: &phone, Email: "test@example.com"}
-	pass := "12345678"
+	pass := "Test@4010000000"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	u.Password = string(hashedPassword)
 

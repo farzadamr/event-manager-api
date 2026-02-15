@@ -125,7 +125,7 @@ func (h *UserHandler) GetById(c *gin.Context) {
 func (h *UserHandler) GetList(c *gin.Context) {
 	roleName := c.DefaultQuery("role", "default")
 	if err := h.userUsecase.ValidateRoleName(roleName); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError(nil, false, err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, helper.GenerateBaseResponseWithValidationError("role name invalid", false, err))
 		return
 	}
 

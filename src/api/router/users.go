@@ -22,7 +22,7 @@ func User(router *gin.RouterGroup, cfg *config.Config) {
 		adminRoutes.POST(":id/revoke-roles", h.RevokeRoles)
 	}
 	userRoutes := router.Group("")
-	userRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"default"}))
+	userRoutes.Use(middleware.Authentication(cfg), middleware.Authorization([]string{"default", "admin"}))
 	{
 		userRoutes.PUT("/edit-profile", h.EditProfile)
 	}

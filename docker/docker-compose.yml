@@ -16,7 +16,7 @@ services:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
       FILEBEAT_INTERNAL_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
     networks:
-      - webapi_network
+      - webapi-network
     depends_on:
       - elasticsearch
 
@@ -38,7 +38,7 @@ services:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
       discovery.type: single-node
     networks:
-      - webapi_network
+      - webapi-network
     restart: unless-stopped
 
   kibana:
@@ -54,7 +54,7 @@ services:
     environment:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
     networks:
-      - webapi_network
+      - webapi-network
     depends_on:
       - elasticsearch
     restart: unless-stopped
@@ -78,7 +78,7 @@ services:
       FILEBEAT_INTERNAL_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
     networks:
-      - webapi_network
+      - webapi-network
     depends_on:
       - elasticsearch
 
@@ -111,6 +111,9 @@ services:
 
 volumes:
   postgres:
+  elasticsearch:
+  logs:
+  setup:
 
 networks:
   webapi-network:

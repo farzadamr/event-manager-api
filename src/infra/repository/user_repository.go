@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/farzadamr/event-manager-api/common"
@@ -15,6 +16,7 @@ import (
 	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -136,7 +138,7 @@ func (r *UserRepository) GetByRoleNameByFilter(ctx context.Context, roleName str
 	var totalCount int64
 
 	db := r.database.WithContext(ctx)
-	db = database.Preload(db, r.preloads)
+	//db = database.Preload(db, r.preloads)
 
 	limit := req.GetPageSize()
 	offset := req.GetOffset()
@@ -145,7 +147,7 @@ func (r *UserRepository) GetByRoleNameByFilter(ctx context.Context, roleName str
 		Model(&model.User{}).
 		Joins("INNER JOIN user_roles ur ON users.id = ur.user_id").
 		Joins("INNER JOIN roles r ON ur.role_id = r.id").
-		Where("ur.name = ?", roleName)
+		Where("r.name = ?", roleName)
 
 	if err := query.Count(&totalCount).Error; err != nil {
 		return 0, nil, err
@@ -155,8 +157,10 @@ func (r *UserRepository) GetByRoleNameByFilter(ctx context.Context, roleName str
 		Order("created_at desc").
 		Offset(offset).
 		Limit(limit).
+		Preload("UserRoles.Role").
 		Find(&users).Error
 	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
 		return 0, users, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
 	}
 
@@ -186,41 +190,85 @@ func (r *UserRepository) Update(ctx context.Context, id int, e *map[string]inter
 }
 
 func (r *UserRepository) AddRolesToUser(ctx context.Context, userId int, roleIds []int) (model.User, error) {
+	if len(roleIds) == 0 {
+		return model.User{}, fmt.Errorf("roleIds cannot be empty")
+	}
+
 	var user model.User
+	if err := r.database.WithContext(ctx).Preload("UserRoles").First(&user, userId).Error; err != nil {
+		return user, &service_errors.ServiceError{EndUserMessage: "user not found"}
+	}
+
+	var existingRoleCount int64
+	if err := r.database.WithContext(ctx).
+		Model(&model.Role{}).
+		Where("id IN ?", roleIds).
+		Count(&existingRoleCount).Error; err != nil {
+		return user, err
+	}
+
+	if int(existingRoleCount) != len(roleIds) {
+		return user, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+
+	existingRoleIds := make(map[int]bool)
+	for _, ur := range user.UserRoles {
+		existingRoleIds[ur.RoleId] = true
+	}
+
+	var userRoles []model.UserRole
+	for _, roleId := range roleIds {
+		if !existingRoleIds[roleId] {
+			userRoles = append(userRoles, model.UserRole{
+				UserId: userId,
+				RoleId: roleId,
+			})
+		}
+	}
+
+	if len(userRoles) == 0 {
+		db := r.database.WithContext(ctx)
+		db = database.Preload(db, r.preloads)
+		if refreshErr := db.First(&user, userId).Error; refreshErr != nil {
+			return user, refreshErr
+		}
+		return user, nil
+	}
+
+	err := r.database.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			DoNothing: true,
+		}).
+		Create(&userRoles).Error
+
+	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
+		return user, &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
 
 	db := r.database.WithContext(ctx)
 	db = database.Preload(db, r.preloads)
 
-	if err := db.First(&user, userId).Error; err != nil {
-		return user, err
+	if refreshErr := db.First(&user, userId).Error; refreshErr != nil {
+		return user, refreshErr
 	}
 
-	var roles []model.Role
-	if err := db.Find(&roles, roleIds).Error; err != nil {
-		return user, err
-	}
-
-	err := db.Model(&user).Association("Roles").Append(roles)
-	if err != nil {
-		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
-		return user, err
-	}
 	return user, nil
 }
+
 func (r *UserRepository) RemoveRolesFromUser(ctx context.Context, userId int, roleIds []int) error {
-	var user model.User
-
-	user.Id = userId
-
-	var roles []model.Role
-	for _, id := range roleIds {
-		roles = append(roles, model.Role{BaseModel: model.BaseModel{Id: id}})
+	if len(roleIds) == 0 {
+		return nil
 	}
 
-	err := r.database.WithContext(ctx).Model(&user).Association("Roles").Delete(roles)
+	err := r.database.WithContext(ctx).
+		Where("user_id = ? AND role_id IN ?", userId, roleIds).
+		Delete(&model.UserRole{}).Error
+
 	if err != nil {
-		r.logger.Error(logging.Postgres, logging.Update, err.Error(), nil)
+		r.logger.Error(logging.Postgres, logging.Delete, err.Error(), nil)
 		return err
 	}
+
 	return nil
 }

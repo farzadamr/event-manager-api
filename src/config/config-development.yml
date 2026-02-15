@@ -6,7 +6,7 @@ server:
 cors:
   allowOrigins: "*"
 logger:
-  filePath: ../logs/
+  filePath: ./logs/
   encoding: json
   level: debug
   logger: zap
