@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/farzadamr/event-manager-api/api/middleware"
 	"github.com/farzadamr/event-manager-api/api/router"
@@ -29,6 +30,7 @@ func InitServer(cfg *config.Config) {
 	if err != nil {
 		logger.Fatal(logging.General, logging.Startup, err.Error(), nil)
 	}
+	log.Println("Server started", cfg.Server.InternalPort)
 }
 
 func RegisterRoutes(r *gin.Engine, cfg *config.Config) {

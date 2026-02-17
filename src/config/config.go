@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/viper"
@@ -111,10 +112,9 @@ func getConfigPath(env string) string {
 func LoadConfig(fileName string, fileType string) (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigType(fileType)
-	v.SetConfigName(fileName)
-	v.AddConfigPath(".")
+	v.AddConfigPath(filepath.Dir(fileName))
+	v.SetConfigName(filepath.Base(fileName))
 	v.AutomaticEnv()
-
 	err := v.ReadInConfig()
 	if err != nil {
 		log.Printf("Unable to read config: %v", err)

@@ -11,7 +11,7 @@ filebeat.inputs:
       - "/app/*.log"
     fields:
       environment: Development
-    tags: ["gocourse"]
+    tags: ["event-manager-api"]
     multiline.pattern: "^{"
     multiline.negate: true
     multiline.match: after

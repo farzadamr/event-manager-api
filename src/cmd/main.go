@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/farzadamr/event-manager-api/api"
 	"github.com/farzadamr/event-manager-api/config"
 	"github.com/farzadamr/event-manager-api/infra/database"
@@ -20,5 +22,5 @@ func main() {
 
 	migration.Up_1()
 	api.InitServer(cfg)
-	logger.Fatalf("[TEST_FATAL] this in a test log for testing filebeat")
+	log.Printf("api is running on %s:%s", cfg.Server.Domain, cfg.Server.ExternalPort)
 }
