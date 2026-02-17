@@ -40,7 +40,7 @@ type CertTemplateData struct {
 	Username      string
 	EventName     string
 	Duration      string
-	Date          string
+	StartDate     string
 	CertificateID string
 }
 
@@ -75,6 +75,7 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 			TrackingCode:   uc.generateTrackingCode(),
 			Status:         model.Pending,
 		})
+
 	}
 	if len(certsToCreate) == 0 {
 		return &service_errors.ServiceError{EndUserMessage: "No eligible participants for certificate"}
@@ -122,14 +123,15 @@ func (uc *CertificateUsecase) GetListByEventId(ctx context.Context, eventId int,
 }
 
 func (uc *CertificateUsecase) GetCertificateFile(ctx context.Context, certID int) (string, error) {
-	userId := int(ctx.Value(constant.UserIdKey).(float64))
+	userId, _ := ctx.Value(constant.UserIdKey).(float64)
 	if userId == 0 {
 		return "", &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
-	user, err := uc.userRepo.FetchUserInfoById(ctx, userId)
+	user, err := uc.userRepo.FetchUserInfoById(ctx, int(userId))
 	if err != nil {
 		return "", &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
 	}
+
 	cert, err := uc.certificateRepo.GetById(ctx, certID)
 	if err != nil {
 		return "", &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
@@ -206,11 +208,7 @@ func (uc *CertificateUsecase) issueCertificatesAsync(certificates []model.Certif
 	uc.logger.Infof("[CERT] Successfully issued %d certificates", len(certificates))
 }
 
-func (uc *CertificateUsecase) issueCertificate(ctx context.Context, cert model.Certificate) error {
-	certificate, err := uc.certificateRepo.GetById(ctx, cert.Id)
-	if err != nil {
-		return err
-	}
+func (uc *CertificateUsecase) issueCertificate(ctx context.Context, certificate model.Certificate) error {
 	if certificate.Status != model.Pending {
 		return &service_errors.ServiceError{EndUserMessage: "certificate already issued"}
 	}
@@ -267,7 +265,7 @@ func (uc *CertificateUsecase) generateHTML(participant model.Registration, track
 		Username:      participant.User.FirstName + " " + participant.User.LastName,
 		EventName:     participant.Event.Title,
 		Duration:      duration,
-		Date:          common.ToShamsiString(participant.Event.StartDate),
+		StartDate:     common.ToShamsiString(participant.Event.StartDate),
 		CertificateID: trackingCode,
 	}
 

@@ -28,40 +28,122 @@ func NewCertificateRepository(cfg *config.Config, preloads []database.PreloadEnt
 }
 
 func (cr *CertificateRepository) Create(ctx context.Context, r model.Certificate) (*model.Certificate, error) {
-	err := cr.database.WithContext(ctx).Create(&r).Error
-	if err != nil {
+
+	db := cr.database.WithContext(ctx)
+
+	if err := db.Create(&r).Error; err != nil {
 		cr.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
-		return &model.Certificate{}, err
+		return nil, err
 	}
-	return &r, nil
+
+	var result model.Certificate
+	preloadDB := database.Preload(db, cr.preloads)
+
+	if err := preloadDB.
+		First(&result, r.Id).Error; err != nil {
+
+		cr.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (cr *CertificateRepository) BulkCreate(ctx context.Context, certs []model.Certificate) ([]model.Certificate, error) {
-	err := cr.database.WithContext(ctx).Create(&certs).Error
-	if err != nil {
+
+	db := cr.database.WithContext(ctx)
+
+	// insert
+	if err := db.Create(&certs).Error; err != nil {
 		cr.logger.Error(logging.Postgres, logging.BulkInsert, err.Error(), nil)
 		return nil, err
 	}
-	return certs, nil
+
+	// collect ids (FIXED)
+	ids := make([]int, 0, len(certs))
+	for _, c := range certs {
+		ids = append(ids, c.Id)
+	}
+
+	var result []model.Certificate
+
+	preloadDB := database.Preload(db, cr.preloads)
+
+	if err := preloadDB.
+		Where("id IN ?", ids).
+		Find(&result).Error; err != nil {
+
+		cr.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (cr *CertificateRepository) MarkAsIssued(ctx context.Context, id int, file *model.FileRef, metadata *model.CertificateMetadata) error {
-	certificate := new(model.Certificate)
-	if err := cr.database.WithContext(ctx).First(certificate, id).Error; err != nil {
-		cr.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
-		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
-	}
-	now := time.Now()
-	certificate.IssuedAt = &now
-	certificate.Pdf = file
-	certificate.Metadata = metadata
-	certificate.Status = model.Issued
 
-	if err := cr.database.WithContext(ctx).Save(certificate).Error; err != nil {
-		cr.logger.Error(logging.Postgres, logging.Insert, err.Error(), nil)
+	tx := cr.database.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var certificate model.Certificate
+	if err := tx.
+		First(&certificate, id).Error; err != nil {
+
+		tx.Rollback()
+		return &service_errors.ServiceError{
+			EndUserMessage: service_errors.RecordNotFound,
+		}
+	}
+
+	if certificate.RegistrationId == 0 {
+		tx.Rollback()
+		return &service_errors.ServiceError{
+			EndUserMessage: service_errors.UnExpectedError,
+		}
+	}
+
+	now := time.Now()
+	update := map[string]interface{}{
+		"issued_at": now,
+		"status":    model.Issued,
+	}
+	if file != nil {
+		update["file_path"] = file.Path
+		update["file_size"] = file.Size
+		update["file_mime"] = file.Mime
+	}
+	if metadata != nil {
+		update["metadata_user_name"] = metadata.UserName
+		update["metadata_english_name"] = metadata.EnglishName
+		update["metadata_date"] = metadata.Date
+		update["metadata_duration"] = metadata.Duration
+		update["metadata_event_name"] = metadata.EventName
+	}
+
+	if err := tx.Model(&model.Certificate{}).
+		Where("id = ?", id).
+		Updates(update).Error; err != nil {
+		tx.Rollback()
+		return &service_errors.ServiceError{EndUserMessage: service_errors.UnExpectedError}
+	}
+
+	if err := tx.Model(&model.Registration{}).
+		Where("id = ?", certificate.RegistrationId).
+		Update("status", model.StatusIssueCertificate).Error; err != nil {
+
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	return tx.Commit().Error
 }
 
 func (cr *CertificateRepository) GetById(ctx context.Context, id int) (model.Certificate, error) {
@@ -82,8 +164,9 @@ func (cr *CertificateRepository) GetById(ctx context.Context, id int) (model.Cer
 func (cr *CertificateRepository) GetByFilter(ctx context.Context, eventId int, req filter.PaginationInput) (int64, []model.Certificate, error) {
 	var items []model.Certificate
 	var totalRows int64 = 0
-
-	query := cr.database.WithContext(ctx).
+	db := cr.database.WithContext(ctx)
+	db = database.Preload(db, cr.preloads)
+	query := db.
 		Model(&model.Certificate{}).
 		Joins("JOIN registrations r ON certificates.registration_id = r.id").
 		Where("r.event_id = ?", eventId)

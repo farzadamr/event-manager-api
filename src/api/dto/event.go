@@ -13,7 +13,7 @@ type CreateEventRequest struct {
 	TeacherId   int       `json:"teacher_id" binding:"required"`
 	Capacity    int       `json:"capacity" binding:"required"`
 	StartDate   time.Time `json:"start_date" binding:"required,date"`
-	EndDate     time.Time `json:"end-date" binding:"required,date"`
+	EndDate     time.Time `json:"end_date" binding:"required,date"`
 	Location    string    `json:"location" binding:"required"`
 	Price       float64   `json:"price"`
 }

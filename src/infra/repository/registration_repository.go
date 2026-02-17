@@ -2,15 +2,19 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/farzadamr/event-manager-api/config"
+	"github.com/farzadamr/event-manager-api/constant"
 	"github.com/farzadamr/event-manager-api/domain/filter"
 	"github.com/farzadamr/event-manager-api/domain/model"
 	"github.com/farzadamr/event-manager-api/infra/database"
 	"github.com/farzadamr/event-manager-api/pkg/logging"
+	"github.com/farzadamr/event-manager-api/pkg/service_errors"
 	"gorm.io/gorm"
 )
 
@@ -121,18 +125,27 @@ func (r *RegistrationRepository) ListByUserID(ctx context.Context, userId int, p
 
 func (r *RegistrationRepository) CancelByUser(ctx context.Context, eventID, userID int) error {
 	q := "event_id = ? and user_id = ? and status = ? " + softDeleteExp
+	deleteMap := map[string]interface{}{
+		"status":     model.StatusCancelledByUser,
+		"deleted_by": &sql.NullInt64{Int64: int64(ctx.Value(constant.UserIdKey).(float64)), Valid: true},
+		"deleted_at": sql.NullTime{Valid: true, Time: time.Now().UTC()},
+	}
+
+	if ctx.Value(constant.UserIdKey) == nil {
+		return &service_errors.ServiceError{EndUserMessage: service_errors.PermissionDenied}
+	}
+
 	result := r.database.WithContext(ctx).
 		Model(&model.Registration{}).
 		Where(q, eventID, userID, model.StatusRegistered).
-		Update("status", model.StatusCancelledByUser)
+		Updates(deleteMap)
 
 	if result.Error != nil {
 		r.logger.Error(logging.Postgres, logging.Update, result.Error.Error(), nil)
-		return result.Error
+		return &service_errors.ServiceError{EndUserMessage: service_errors.RecordNotFound}
 	}
-
 	if result.RowsAffected == 0 {
-		return errors.New("registration not found or already cancelled")
+		return &service_errors.ServiceError{EndUserMessage: "registration is already cancelled"}
 	}
 
 	return nil
@@ -188,7 +201,7 @@ func (r *RegistrationRepository) GetAllAttendedByEventId(ctx context.Context, ev
 	db = database.Preload(db, r.preloads)
 
 	err := db.
-		Where("event_id = ? AND attendance_status = ?", eventID, model.Present).
+		Where("event_id = ? AND status = ? AND attendance_status = ?", eventID, model.StatusRegistered, model.Present).
 		Find(&registrations).
 		Error
 	if err != nil {

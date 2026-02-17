@@ -34,12 +34,15 @@ func NewRegisterEventUsecase(cfg *config.Config,
 }
 
 func (u *RegisterEventUsecase) RegisterForEvent(ctx context.Context, eventID, userId int) error {
-	register, err := u.registerRepository.FindByEventIDAndUserID(ctx, eventID, userId)
+	_, err := u.registerRepository.FindByEventIDAndUserID(ctx, eventID, userId)
 	if err == nil {
 		return &service_errors.ServiceError{EndUserMessage: "registration already exist"}
 	}
-	if register.Event.Capacity == 0 {
-		u.logger.Error(logging.Internal, logging.NoCapacity, "", nil)
+	event, err := u.eventRepository.GetById(ctx, eventID)
+	if err != nil {
+		return &service_errors.ServiceError{EndUserMessage: "failed to get event by id"}
+	}
+	if event.Capacity == 0 {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.NoCapacity}
 	}
 	registration := model.Registration{
@@ -52,7 +55,7 @@ func (u *RegisterEventUsecase) RegisterForEvent(ctx context.Context, eventID, us
 		return err
 	}
 	//decrease capacity
-	newCapacity := register.Event.Capacity - 1
+	newCapacity := event.Capacity - 1
 	if err = u.eventRepository.ChangeCapacity(ctx, eventID, newCapacity); err != nil {
 		return err
 	}

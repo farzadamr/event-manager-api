@@ -7,6 +7,7 @@ type AttendanceStatus string
 
 const (
 	StatusRegistered       RegistrationStatus = "REGISTERED"
+	StatusIssueCertificate RegistrationStatus = "ISSUE_CERTIFICATE"
 	StatusCancelledByUser  RegistrationStatus = "CANCELLED_BY_USER"
 	StatusCancelledByEvent RegistrationStatus = "CANCELLED_BY_EVENT"
 )

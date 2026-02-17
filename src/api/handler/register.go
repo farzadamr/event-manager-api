@@ -63,5 +63,5 @@ func (h *RegisterHandler) CancelRegistration(c *gin.Context) {
 		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err), helper.GenerateBaseResponseWithError(nil, false, err))
 		return
 	}
-	c.JSON(http.StatusCreated, helper.GenerateBaseResponse(nil, true))
+	c.JSON(http.StatusNoContent, helper.GenerateBaseResponse(nil, true))
 }

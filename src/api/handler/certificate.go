@@ -84,7 +84,7 @@ func (h *CertificateHandler) Download(c *gin.Context) {
 		return
 	}
 
-	filePath, err := h.certificateUsecase.GetCertificateFile(c.Request.Context(), CertID)
+	filePath, err := h.certificateUsecase.GetCertificateFile(c, CertID)
 	if err != nil {
 		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err),
 			helper.GenerateBaseResponseWithError(nil, false, err))
@@ -128,7 +128,7 @@ func (h *CertificateHandler) ME(c *gin.Context) {
 		PageSize:   pageSize,
 	}
 
-	pagedResult, err := h.certificateUsecase.GetUserCertificates(c.Request.Context(), pagination)
+	pagedResult, err := h.certificateUsecase.GetUserCertificates(c, pagination)
 	if err != nil {
 		sc := helper.TranslateErrorToStatusCode(err)
 		c.AbortWithStatusJSON(sc, helper.GenerateBaseResponseWithError(nil, false, err))
@@ -194,7 +194,7 @@ func (h *CertificateHandler) GetByEventId(c *gin.Context) {
 		PageSize:   pageSize,
 	}
 
-	pagedResult, err := h.certificateUsecase.GetListByEventId(c.Request.Context(), eventId, pagination)
+	pagedResult, err := h.certificateUsecase.GetListByEventId(c, eventId, pagination)
 	if err != nil {
 		sc := helper.TranslateErrorToStatusCode(err)
 		c.AbortWithStatusJSON(sc, helper.GenerateBaseResponseWithError(nil, false, err))
