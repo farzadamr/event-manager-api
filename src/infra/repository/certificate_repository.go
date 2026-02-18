@@ -254,3 +254,25 @@ func (cr *CertificateRepository) VerifyCertificate(ctx context.Context, tracking
 	return certificate, nil
 
 }
+
+func (r *CertificateRepository) GetByRegistrationIds(ctx context.Context, ids []int) ([]model.Certificate, error) {
+	if len(ids) == 0 {
+		return []model.Certificate{}, nil
+	}
+
+	var certs []model.Certificate
+
+	db := r.database.WithContext(ctx)
+	db = database.Preload(db, r.preloads)
+
+	err := db.
+		Where("registration_id IN ?", ids).
+		Find(&certs).Error
+
+	if err != nil {
+		r.logger.Error(logging.Postgres, logging.Select, err.Error(), nil)
+		return nil, err
+	}
+
+	return certs, nil
+}

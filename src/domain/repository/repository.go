@@ -59,4 +59,5 @@ type CertificateRepository interface {
 	GetByRegistrationId(ctx context.Context, registrationId int) (*model.Certificate, error)
 	GetByUserIdByFilter(ctx context.Context, userId int, req filter.PaginationInput) (int64, []model.Certificate, error)
 	VerifyCertificate(ctx context.Context, trackingCode string) (model.Certificate, error)
+	GetByRegistrationIds(ctx context.Context, Ids []int) ([]model.Certificate, error)
 }

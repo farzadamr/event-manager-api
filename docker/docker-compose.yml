@@ -110,7 +110,7 @@ services:
     restart: unless-stopped
   web-api1:
     build: ../src/
-    image: web-api3:latest
+    image: web-api4:latest
     container_name: web-api-container
     ports:
       - 5005:5000

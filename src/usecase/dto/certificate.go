@@ -11,7 +11,7 @@ type Certificate struct {
 	Id           int
 	RegisterId   int
 	Name         string
-	PdfPath      string
+	PdfPath      *string
 	IssuedAt     *time.Time
 	TrackingCode string
 	Status       string
@@ -29,11 +29,19 @@ func ToCertificateList(certificates []model.Certificate) []Certificate {
 }
 
 func ToCertificateDto(model model.Certificate) Certificate {
+	var pdfPath *string
+	if model.Pdf != nil {
+		pdfPath = &model.Pdf.Path
+	}
+	name := ""
+	if model.Registration.Id != 0 && model.Registration.User.Id != 0 {
+		name = model.Registration.User.FirstName + " " + model.Registration.User.LastName
+	}
 	return Certificate{
 		Id:           model.Id,
 		RegisterId:   model.RegistrationId,
-		Name:         model.Registration.User.FirstName + " " + model.Registration.User.LastName,
-		PdfPath:      model.Pdf.Path,
+		Name:         name,
+		PdfPath:      pdfPath,
 		IssuedAt:     model.IssuedAt,
 		TrackingCode: model.TrackingCode,
 		Status:       string(model.Status),

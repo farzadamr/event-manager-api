@@ -67,17 +67,36 @@ func (uc *CertificateUsecase) IssueEventCertificate(ctx context.Context, eventId
 		return &service_errors.ServiceError{EndUserMessage: "No attended participants found"}
 	}
 
+	var ids []int
+	for _, p := range participants {
+		ids = append(ids, p.Id)
+	}
+	existingCerts, err := uc.certificateRepo.GetByRegistrationIds(ctx, ids)
+	if err != nil {
+		return err
+	}
+
+	existingMap := make(map[int]bool)
+	for _, c := range existingCerts {
+		existingMap[c.RegistrationId] = true
+	}
+
 	var certsToCreate []model.Certificate
 	for _, p := range participants {
-		certsToCreate = append(certsToCreate, model.Certificate{
-			RegistrationId: p.Id,
-			EventId:        p.EventId,
-			TrackingCode:   uc.generateTrackingCode(),
-			Status:         model.Pending,
-		})
-
+		if !existingMap[p.Id] {
+			certsToCreate = append(certsToCreate, model.Certificate{
+				RegistrationId: p.Id,
+				EventId:        p.EventId,
+				TrackingCode:   uc.generateTrackingCode(),
+				Status:         model.Pending,
+			})
+		}
 	}
 	if len(certsToCreate) == 0 {
+		if len(existingMap) != 0 {
+			go uc.issueCertificatesAsync(existingCerts)
+			return nil
+		}
 		return &service_errors.ServiceError{EndUserMessage: "No eligible participants for certificate"}
 	}
 
