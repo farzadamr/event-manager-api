@@ -234,6 +234,7 @@ func (uc *CertificateUsecase) issueCertificate(ctx context.Context, certificate 
 	//HTML
 	html := uc.generateHTML(certificate.Registration, certificate.TrackingCode)
 	if html == "" {
+		uc.logger.Warnf("[CERT] Failed to generate HTML")
 		log.Printf("[ERROR] HTML generation failed for certID: %d", certificate.Id)
 		return &service_errors.ServiceError{EndUserMessage: "HTML generation failed"}
 	}
@@ -242,12 +243,14 @@ func (uc *CertificateUsecase) issueCertificate(ctx context.Context, certificate 
 	pdfBytes, err := uc.pdfClient.HTMLToPDF(html)
 	if err != nil {
 		log.Printf("[ERROR] Gotenberg failed for certID %d: %v", certificate.Id, err)
+		uc.logger.Warnf("[CERT] Failed to issue certificate for event %d: %v", certificate.Id, err)
 		return &service_errors.ServiceError{EndUserMessage: "Gotenberg failed"}
 	}
 
 	//Save
 	filePath, err := uc.savePDF(pdfBytes, certificate.RegistrationId)
 	if err != nil {
+		uc.logger.Errorf("[ERROR] Failed to save PDF: %v", err)
 		return &service_errors.ServiceError{EndUserMessage: "Save PDF failed"}
 	}
 
@@ -267,6 +270,7 @@ func (uc *CertificateUsecase) issueCertificate(ctx context.Context, certificate 
 	}
 	err = uc.certificateRepo.MarkAsIssued(ctx, certificate.Id, file, metadata)
 	if err != nil {
+		uc.logger.Warnf("[CERT] Failed to mark certificate as issued: %v", err)
 		return &service_errors.ServiceError{EndUserMessage: "Mark certificate as issued failed"}
 	}
 	return nil
