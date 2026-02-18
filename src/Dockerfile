@@ -19,6 +19,7 @@ WORKDIR /app
 COPY --from=builder /app/server .
 COPY --from=builder /app/config/config-docker.yml ./config/config-docker.yml
 COPY --from=builder /app/storage ./storage
+COPY --from=builder /app/template ./template
 
 ENV APP_ENV=docker
 ENV PORT=5005
