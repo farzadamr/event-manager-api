@@ -13,7 +13,7 @@
 ###
 
 <div align="center">
-  <img height="200" src="https://i.imgflip.com/65efzo.gif"  />
+  <img height="200" src="docs/system-design.png"  />
 </div>
 
 ###
@@ -23,7 +23,7 @@
 ###
 
 <div align="center">
-  <img height="200" src="https://i.imgflip.com/65efzo.gif"  />
+  <img height="200" src="docs/database.png"  />
 </div>
 
 ###
@@ -40,31 +40,70 @@
 
 ###
 
-<p align="left">If you pushed your image to Docker Hub:</p>
+If you pushed your image to Docker Hub, use:
 
+```bash
+docker pull frzdamr/event-manager-api:latest
+```
 ###
 
 <h2 align="left">🚀 Run with Docker Compose (Recommended)</h2>
 
 ###
 
-<p align="left">1️⃣ Clone project<br><br>git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git<br>cd YOUR_REPO<br><br>2️⃣ Run all services<br><br>docker compose up -d<br><br>This will start:<br>API server<br>PostgreSQL<br>Elasticsearch<br>Kibana<br>Filebeat<br>Gotenberg<br><br>3️⃣ Access services<br>Service	URL<br><br>API	http://localhost:8080<br><br>Kibana	http://localhost:5601<br><br>PostgreSQL	localhost:5432</p>
+1️⃣ Clone project
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO<br>
+```
+2️⃣ Run all services
+
+```bash
+docker compose up -d
+```
+This will start:
+API server
+PostgreSQL
+Elasticsearch
+Kibana
+Filebeat
+Gotenberg
+
+3️⃣ Access services
+Service	URL
+
+| service | url |
+| --- | --- |
+| API	| http://localhost:5005 |
+| Kibana |	http://localhost:5601 |
+| PostgreSQL |	http://localhost:5432 |
+| Gotenberg | http://localhost:3000 |
 
 ###
 
 <h2 align="left">⚙️ Configuration</h2>
 
 ###
+Project uses Viper for configuration.
 
-<p align="left">Project uses Viper for configuration.<br><br>Example structure:<br><br>config/<br> ├── config.yaml<br> ├── config-docker.yaml</p>
+Example structure:
 
+```
+config/
+├── config-development.yaml
+├── config-docker.yaml
+├── config-production.yaml
+```
 ###
 
 <h2 align="left">📄 API Documentation</h2>
 
 ###
 
-<p align="left">Postman collection:<br><br>docs/postman_collection.json<br><br>Import into Postman to test endpoints.</p>
+Postman collection:
+
+`docs/postman_collection-document.json` Import into Postman to test endpoints.
 
 ###
 
@@ -72,30 +111,40 @@
 
 ###
 
-<p align="left">Application logs → Filebeat<br><br>Filebeat → Elasticsearch<br><br>Elasticsearch → Kibana<br><br>Structured logging via:<br><br>Zap<br><br>Zerolog</p>
+<p align="left">Application logs → Filebeat<br>Filebeat → Elasticsearch<br>Elasticsearch → Kibana</p>
+
+Structured logging via:
+
+- Zap
+- Zerolog
 
 ###
 
 <h2 align="left">🛠️ Run Locally (Without Docker)</h2>
 
 ###
-
-<p align="left">go mod tidy<br>go run main.go</p>
+```
+go mod tidy
+go run cmd/main.go
+```
 
 ###
 
 <h2 align="left">📌 TODO</h2>
 
 ###
-
-<p align="left">Kubernetes deployment<br><br> CI/CD pipeline<br><br> Rate limiting<br><br> Email sending<br><br> Admin panel</p>
+- [ ] Font-End Application
+- [ ] Email sending
+- [ ] Integration Test
+- [ ] CI/CD pipeline
+- [ ] Kubernetes deployment
 
 ###
 
-<h2 align="left">⭐ Support</h2>
+<h2 align="center">⭐ Support</h2>
 
 ###
 
-<p align="left">If you like this project, give it a star ⭐ on GitHub.</p>
+<p align="center">If you like this project, give it a star ⭐ on GitHub.</p>
 
 ###
