@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>A4 Landscape Template</title>
+
+    <style>
+        /* Thin */
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Thin.ttf') format('truetype');*/
+        /*    font-weight: 100;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /*!* Light *!*/
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Light.ttf') format('truetype');*/
+        /*    font-weight: 300;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /*!* Regular *!*/
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Regular.ttf') format('truetype');*/
+        /*    font-weight: 400;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /*!* Medium *!*/
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Medium.ttf') format('truetype');*/
+        /*    font-weight: 500;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /*!* Bold *!*/
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Bold.ttf') format('truetype');*/
+        /*    font-weight: 700;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /*!* Black *!*/
+        /*@font-face {*/
+        /*    font-family: 'Vazirmatn';*/
+        /*    src: url('./assets/fonts/Vazir-Black.ttf') format('truetype');*/
+        /*    font-weight: 900;*/
+        /*    font-style: normal;*/
+        /*}*/
+
+        /* استفاده */
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+
+        :root{
+            --primary:#111827;
+            --accent:#6366f1;
+            --accent2:#22c55e;
+            --glass:rgba(255,255,255,0.08);
+        }
+
+        *{
+            box-sizing:border-box;
+            font-family:'Vazirmatn', sans-serif;
+        }
+
+        body{
+            margin:0;
+            background:#0f172a;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:0px;
+        }
+
+        /* A4 landscape */
+        .page{
+            width:297mm;
+            height:210mm;
+            background:linear-gradient(135deg,#020617,#0f172a,#020617);
+            position:relative;
+            overflow:hidden;
+            border-radius:16px;
+            box-shadow:0 40px 120px rgba(0,0,0,0.6);
+        }
+
+        /* decorative glow */
+        .page::before{
+            content:"";
+            position:absolute;
+            width:600px;
+            height:600px;
+            background:radial-gradient(circle,rgba(99,102,241,0.3),transparent);
+            top:-200px;
+            right:-200px;
+        }
+        .page::after{
+            content:"";
+            position:absolute;
+            width:500px;
+            height:500px;
+            background:radial-gradient(circle,rgba(34,197,94,0.25),transparent);
+            bottom:-200px;
+            left:-200px;
+        }
+
+        /* HEADER */
+        .header{
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            height:80px;
+            backdrop-filter:blur(10px);
+            background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);
+            border-bottom:1px solid rgba(255,255,255,0.15);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:0 50px;
+            z-index:10;
+        }
+
+        .logo{
+            font-size:22px;
+            font-weight:800;
+            color:white;
+            letter-spacing:2px;
+        }
+
+        .header-right{
+            color:#cbd5e1;
+            font-size:14px;
+        }
+
+        /* FOOTER */
+        .footer{
+            position:absolute;
+            bottom:0;
+            left:0;
+            right:0;
+            height:70px;
+            backdrop-filter:blur(10px);
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08));
+            border-top:1px solid rgba(255,255,255,0.15);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:0 50px;
+            color:#94a3b8;
+            font-size:13px;
+        }
+
+        /* CONTENT */
+        .content{
+            position:absolute;
+            top:100px;
+            bottom:90px;
+            left:80px;
+            right:80px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            text-align:center;
+            color:white;
+        }
+
+        .title{
+            font-size:42px;
+            font-weight:800;
+            margin-bottom:20px;
+            background:linear-gradient(90deg,#fff,#a5b4fc);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .subtitle{
+            font-size:18px;
+            color:#cbd5e1;
+            margin-bottom:40px;
+        }
+
+        .text-area{
+            width:80%;
+            min-height:80px;
+            padding:20px 30px;
+            border-radius:14px;
+            background:var(--glass);
+            border:1px solid rgba(255,255,255,0.12);
+            font-size:16px;
+            line-height:2;
+            color:#e5e7eb;
+        }
+        .signature{
+
+        }
+        .watermark{
+            position:absolute;
+            font-size:140px;
+            font-weight:800;
+            opacity:0.04;
+            transform:rotate(-20deg);
+            top:40%;
+            left:30%;
+            pointer-events:none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <!-- HEADER -->
+
+    <div class="header">
+        <div class="logo">دانشگاه بزرگمهر قائنات</div>
+        <div class="header-right">انجمن علمی مهندسی کامپیوتر</div>
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="content">
+        <div class="title">گواهی حضور</div>
+<!--        <div class="subtitle">در رویداد</div>-->
+
+        <div class="text-area">
+            با کمال افتخار و سپاس از حضور و مشارکت<br>
+            <div class="title">{{.Username}}</div>
+            در رویداد
+            <div class="title">{{.EventName}}</div>
+            که به مدت
+            <strong>{{.Duration}}</strong>
+            ساعت آموزشی در تاریخ
+            <strong>{{.StartDate}}</strong>
+            برگزار شد، قدردانی می نماییم.<br>
+            امیدواریم این تجربه، سودمند و الهام بخش بوده باشد.
+
+            <div class="signature">
+                <div class="signature_name">دکتر محمد جوادی مقدم</div>
+                <div class="signature_sub">ریاست دانشکده فنی و مهندسی</div>
+                <div class="signature_pic"></div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- WATERMARK -->
+
+    <div class="watermark">CERT</div>
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=http://localhost:5005/api/v1/certificates/verify/{{.CertificateID}}" alt="QR Code">
+        </div>
+        <div>Generated by System</div>
+    </div>
+
+</div>
+
+</body>
+</html>
