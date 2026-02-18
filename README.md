@@ -13,7 +13,7 @@
 ###
 
 <div align="center">
-  <img height="200" src="docs/system-design.png"  />
+  <img width="100%" src="docs/system-design.png"  />
 </div>
 
 ###
@@ -23,7 +23,7 @@
 ###
 
 <div align="center">
-  <img height="200" src="docs/database.png"  />
+  <img width="100%" src="docs/database.png"  />
 </div>
 
 ###
