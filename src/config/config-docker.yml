@@ -33,4 +33,4 @@ jwt:
   accessTokenExpireDuration: 60
   refreshTokenExpireDuration: 60
 pdf:
-  url: "http://localhost:3000/"
+  url: "http://gotenberg:3000/"

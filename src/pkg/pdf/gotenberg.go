@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 )
@@ -36,7 +37,11 @@ func (c *Client) HTMLToPDF(htmlContent string) ([]byte, error) {
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("[FAILED] failed to connect gotenberg backing service: ", err)
+		return nil, err
+	}
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("could not convert html to pdf: %s", string(b))
