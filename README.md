@@ -54,8 +54,8 @@ docker pull frzdamr/event-manager-api:latest
 1️⃣ Clone project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO<br>
+git clone https://github.com/farzadamr/event-manager-api.git
+cd docker
 ```
 2️⃣ Run all services
 
