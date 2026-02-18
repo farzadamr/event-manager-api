@@ -1,0 +1,1124 @@
+{
+  "info": {
+    "_postman_id": "8b6dc040-265a-4e51-8a13-4fc00d052b70",
+    "name": "Event_Manager_API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38221649"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"student_number\": \"4010000000\",\r\n    \"password\": \"Test@4010000000\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/users/login-by-student-number",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                "login-by-student-number"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstName\": \"ّنام\",\r\n    \"lastName\": \"نام خانوادگی\",\r\n    \"student_number\": \"4012345678\",\r\n    \"english_name\": \"name\",\r\n    \"phone_number\": \"09150000000\",\r\n    \"email\": \"user@example.com\",\r\n    \"password\": \"strong_password\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/users/register-by-student-number",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                "register-by-student-number"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh-token",
+          "request": {
+            "auth": {
+              "type": "bearer"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/users/refresh-token",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                "refresh-token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "GetList",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/users/list?role=default",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "default"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GetById",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/users/:id",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AssignRole",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"user_id\": 2,\r\n    \"role_ids\": [1,3] \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/users/:id/assign-roles",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                ":id",
+                "assign-roles"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RevokeRole",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"user_id\": 2,\r\n    \"role_ids\": [\r\n        3\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/users/:id/revoke-roles",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                ":id",
+                "revoke-roles"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "EditProfile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 0,\r\n    \"firstName\": \"\",\r\n    \"lastName\": \"\",\r\n    \"email\": \"\",\r\n    \"phone\": \"\",\r\n    \"englishName\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/users/edit-profile",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "users",
+                "edit-profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Role",
+      "item": [
+        {
+          "name": "GetAll",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/roles/",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "roles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GetById",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/roles/:id",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "roles",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 2,\r\n    \"display_name\": \"مدرس\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/roles/",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "roles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\":\"\",\r\n    \"display_name\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/roles/",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "roles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Event",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"\",\r\n    \"description\": \"\",\r\n    \"teacher_id\": 0,\r\n    \"poster_file\": {\r\n        \"paht\": \"\",\r\n        \"mime\": \"\",\r\n        \"size\": \"\"\r\n    },\r\n    \"capacity\": 2,\r\n    \"start_date\": \"\",\r\n    \"end_date\": \"\",\r\n    \"location\": \"\",\r\n    \"price\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/events/",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "upload-poster",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "poster",
+                  "type": "file",
+                  "uuid": "afcc7e57-d2a6-468e-83c4-edddedd5c87a",
+                  "value": null
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{event-api}}/events/upload-poster",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                "upload-poster"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"\",\r\n    \"description\": \"\",\r\n    \"teacher_id\": \"\",\r\n    \"capacity\": \"\",\r\n    \"date\": \"\",\r\n    \"location\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/events/:id",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change-status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id/status",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get-events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/?pageNumber=1&pageSize=10",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "pageNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get-event-by-id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id/register",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id/register",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "certificates",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/events/:id/certificates",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "events",
+                ":id",
+                "certificates"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "get-registrations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/registrations/:eventID",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "registrations",
+                ":eventID"
+              ],
+              "variable": [
+                {
+                  "key": "eventID",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get-attendance",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/registrations/:eventID/attendance",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "registrations",
+                ":eventID",
+                "attendance"
+              ],
+              "variable": [
+                {
+                  "key": "eventID",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update-attendance-list",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"id\": 1,\r\n        \"status\": \"PRESENT\"\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{event-api}}/registrations/attendance",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "registrations",
+                "attendance"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Certificate",
+      "item": [
+        {
+          "name": "issue",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/certificates/issue/:registerID",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "certificates",
+                "issue",
+                ":registerID"
+              ],
+              "variable": [
+                {
+                  "key": "registerID",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "verify",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/certificates/verify?ID=",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "certificates",
+                "verify"
+              ],
+              "query": [
+                {
+                  "key": "ID",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "issue-all",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/certificates/issue-all/:eventID",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "certificates",
+                "issue-all",
+                ":eventID"
+              ],
+              "variable": [
+                {
+                  "key": "eventID",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "download",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/certificates/:id/download",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "certificates",
+                ":id",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event-api}}/certificates/me",
+              "host": [
+                "{{event-api}}"
+              ],
+              "path": [
+                "certificates",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "static",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{event-api}}/static/",
+          "host": [
+            "{{event-api}}"
+          ],
+          "path": [
+            "static",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "event-api",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
