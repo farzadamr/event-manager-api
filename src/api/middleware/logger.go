@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/farzadamr/event-manager-api/config"
@@ -41,9 +42,15 @@ func structuredLogger(logger logging.Logger) gin.HandlerFunc {
 		path := c.FullPath()
 		raw := c.Request.URL.RawQuery
 
-		bodyBytes, _ := io.ReadAll(c.Request.Body)
-		c.Request.Body.Close()
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		contentType := c.GetHeader("Content-Type")
+
+		var bodyBytes []byte
+
+		if strings.Contains(contentType, "application/json") {
+			bodyBytes, _ = io.ReadAll(c.Request.Body)
+			c.Request.Body.Close()
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		}
 
 		c.Writer = blw
 		c.Next()

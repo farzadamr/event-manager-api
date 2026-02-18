@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/farzadamr/event-manager-api/api/middleware"
 	"github.com/farzadamr/event-manager-api/api/router"
@@ -19,10 +20,12 @@ var logger = logging.NewLogger(config.GetConfig())
 func InitServer(cfg *config.Config) {
 	gin.SetMode(cfg.Server.RunMode)
 	r := gin.New()
+
 	RegisterValidators()
 
 	r.Use(middleware.DefaultStructuredLogger(cfg))
 	r.Use(gin.Logger())
+	r.MaxMultipartMemory = 20 << 20
 
 	RegisterRoutes(r, cfg)
 	logger.Info(logging.General, logging.Startup, "Started", nil)
@@ -38,6 +41,10 @@ func RegisterRoutes(r *gin.Engine, cfg *config.Config) {
 
 	v1 := api.Group("/v1")
 	{
+		fmt.Println(filepath.Abs("./storage/poster"))
+		// Statics
+		v1.Static("/static", "./storage/poster")
+
 		// User
 		users := v1.Group("/users")
 		router.User(users, cfg)

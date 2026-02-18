@@ -24,7 +24,6 @@ func NewEventHandler(cfg *config.Config) *EventHandler {
 	eventUsecase := usecase.NewEventUsecase(cfg, dependency.GetEventRepository(), userRepository)
 	return &EventHandler{eventUsecase: eventUsecase, config: cfg}
 }
-
 func (h *EventHandler) Create(c *gin.Context) {
 	var req dto.CreateEventRequest
 	err := c.ShouldBindJSON(&req)
@@ -34,15 +33,15 @@ func (h *EventHandler) Create(c *gin.Context) {
 		return
 	}
 
-	err = h.eventUsecase.PublishEvent(c, req.ToCreateEvent())
+	err = h.eventUsecase.PublishEvent(c.Request.Context(), req.ToCreateEvent())
 	if err != nil {
 		c.AbortWithStatusJSON(helper.TranslateErrorToStatusCode(err),
 			helper.GenerateBaseResponseWithError(nil, false, err))
 		return
 	}
+
 	c.JSON(http.StatusCreated, helper.GenerateBaseResponse(nil, true))
 }
-
 func (h *EventHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

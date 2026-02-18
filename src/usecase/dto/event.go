@@ -3,6 +3,7 @@ package dto
 import (
 	"time"
 
+	"github.com/farzadamr/event-manager-api/common"
 	"github.com/farzadamr/event-manager-api/domain/model"
 )
 
@@ -11,6 +12,7 @@ type CreateEvent struct {
 	Description string
 	TeacherId   int
 	Capacity    int
+	PosterFile  FileRef
 	StartDate   time.Time
 	EndDate     time.Time
 	Location    string
@@ -22,6 +24,7 @@ type UpdateEvent struct {
 	Title       *string
 	Description *string
 	TeacherId   *int
+	PosterFile  *FileRef
 	Capacity    *int
 	StartDate   *time.Time
 	EndDate     *time.Time
@@ -32,7 +35,7 @@ type EventModel struct {
 	Id          int
 	Title       string
 	Description string
-	Poster_Path string
+	PosterPath  string
 	Teacher     TeacherModel
 	Capacity    int
 	StartDate   time.Time
@@ -49,11 +52,13 @@ type TeacherModel struct {
 }
 
 func CreateEventToEventModel(form CreateEvent) model.Event {
+	file, _ := common.TypeConverter[model.FileRef](form.PosterFile)
 	return model.Event{
 		Title:       form.Title,
 		Description: form.Description,
 		TeacherId:   form.TeacherId,
 		Capacity:    form.Capacity,
+		Poster:      file,
 		StartDate:   form.StartDate,
 		EndDate:     form.EndDate,
 		Location:    form.Location,
@@ -73,6 +78,18 @@ func (req *UpdateEvent) ToUpdateMap() map[string]interface{} {
 	if req.TeacherId != nil {
 		updates["TeacherId"] = *req.TeacherId
 	}
+	if req.PosterFile != nil {
+		if req.PosterFile.Path != "" {
+			updates["poster_path"] = req.PosterFile.Path
+		}
+		if req.PosterFile.Mime != "" {
+			updates["poster_mime"] = req.PosterFile.Mime
+		}
+		if req.PosterFile.Size != 0 {
+			updates["poster_size"] = req.PosterFile.Size
+		}
+	}
+
 	if req.Capacity != nil {
 		updates["Capacity"] = *req.Capacity
 	}
@@ -90,11 +107,12 @@ func (req *UpdateEvent) ToUpdateMap() map[string]interface{} {
 }
 
 func ToEventModel(e model.Event) EventModel {
+	file, _ := common.TypeConverter[FileRef](e.Poster)
 	return EventModel{
 		Id:          e.Id,
 		Title:       e.Title,
 		Description: e.Description,
-		Poster_Path: e.Poster.Path,
+		PosterPath:  file.Path,
 		Teacher: TeacherModel{
 			Id:        e.Teacher.Id,
 			FirstName: e.Teacher.FirstName,
